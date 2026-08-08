@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MultiCraft 3D Converter</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
     <style>
         @font-face {
             font-family: 'MultiCraftFont';
@@ -12,168 +17,138 @@
         }
 
         :root {
-            --bg: #080808;
-            --panel: #111111;
-            --border: #222222;
+            --bg: #0a0a0a;
+            --panel: #141414;
+            --border: #262626;
+            --border-active: #00ff41;
             --accent: #00ff41;
-            --text-main: #dddddd;
-            --text-muted: #666666;
-            --font-custom: 'MultiCraftFont', 'Courier New', monospace;
-            --font-main: 'Courier New', monospace;
+            --text: #ffffff;
+            --text-dim: #777777;
+            --font-main: 'MultiCraftFont', 'Press Start 2P', 'Courier New', monospace;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: var(--font-main);
+            user-select: none;
         }
 
         body {
             background-color: var(--bg);
-            color: var(--text-main);
-            font-family: var(--font-main);
-            font-size: 13px;
-            line-height: 1.4;
+            color: var(--text);
+            font-size: 11px;
+            line-height: 1.5;
+            padding: 16px;
             min-height: 100vh;
         }
 
         header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        h1 {
-            font-family: var(--font-custom);
-            font-size: 14px;
-            color: var(--accent);
-            font-weight: normal;
-            letter-spacing: 1px;
-        }
-
-        .version {
-            color: var(--text-muted);
-            font-size: 11px;
-        }
-
-        .nav {
-            display: flex;
-            border-bottom: 1px solid var(--border);
-            background: var(--panel);
-        }
-
-        .nav-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid transparent;
-            color: var(--text-muted);
-            padding: 12px;
-            font-family: var(--font-main);
-            font-size: 12px;
-            cursor: pointer;
             text-align: center;
-        }
-
-        .nav-btn.active {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-            background: rgba(0, 255, 65, 0.02);
-        }
-
-        .nav-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        main {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px 16px;
-        }
-
-        .tab-panel {
-            display: none;
-        }
-
-        .tab-panel.active {
-            display: block;
-        }
-
-        .box {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            padding: 16px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border);
             margin-bottom: 16px;
         }
 
-        .box-title {
-            font-family: var(--font-custom);
-            font-size: 12px;
-            color: var(--text-main);
+        h1 {
+            font-size: 14px;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 16px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 850px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        .panel-title {
+            font-size: 10px;
+            color: var(--accent);
             margin-bottom: 12px;
             text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        .field {
+            margin-bottom: 12px;
         }
 
         label {
             display: block;
-            color: var(--text-muted);
+            color: var(--text-dim);
+            font-size: 9px;
             margin-bottom: 6px;
-            font-size: 11px;
         }
 
-        input[type="file"], select, input[type="range"] {
+        select, input[type="file"], button {
             width: 100%;
             background: var(--bg);
             border: 1px solid var(--border);
-            color: var(--text-main);
+            color: var(--text);
             padding: 8px;
-            font-family: var(--font-main);
-            font-size: 12px;
+            font-size: 9px;
             outline: none;
-            margin-bottom: 12px;
+        }
+
+        select:focus, button:hover {
+            border-color: var(--border-active);
+        }
+
+        .slider-row {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-dim);
+            font-size: 9px;
+            margin-bottom: 4px;
+        }
+
+        .val-tag {
+            color: var(--accent);
         }
 
         input[type="range"] {
-            padding: 0;
-            height: 20px;
-            accent-color: var(--accent);
-        }
-
-        .val {
-            color: var(--accent);
-            float: right;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        button.btn {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
             background: var(--bg);
             border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 10px 14px;
-            font-family: var(--font-main);
-            font-size: 11px;
-            cursor: pointer;
-            width: 100%;
-            text-transform: uppercase;
-            transition: all 0.15s ease;
+            outline: none;
         }
 
-        button.btn:hover:not(:disabled) {
-            border-color: var(--accent);
-            color: var(--accent);
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            cursor: pointer;
         }
 
         button.btn-main {
-            border-color: var(--accent);
+            background: var(--panel);
+            border: 1px solid var(--accent);
             color: var(--accent);
+            cursor: pointer;
+            padding: 10px;
+            text-transform: uppercase;
+            transition: all 0.15s;
         }
 
         button.btn-main:hover:not(:disabled) {
@@ -182,45 +157,56 @@
         }
 
         button:disabled {
-            opacity: 0.25;
+            opacity: 0.3;
             cursor: not-allowed;
+        }
+
+        .viewport-box {
+            position: relative;
+            height: 480px;
+            background: #000;
+            border: 2px solid var(--border);
         }
 
         #canvas3d {
             width: 100%;
-            height: 400px;
-            background: var(--bg);
-            border: 1px solid var(--border);
+            height: 100%;
+            display: block;
+        }
+
+        .viewport-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            margin-top: 12px;
+            margin-top: 8px;
         }
 
-        .stat-card {
+        .stat-item {
             background: var(--bg);
             border: 1px solid var(--border);
             padding: 8px;
             text-align: center;
         }
 
-        .stat-num {
-            font-size: 14px;
+        .stat-val {
             color: var(--accent);
             margin-top: 4px;
         }
 
-        .commands-list {
+        .cmd-out {
             background: var(--bg);
             border: 1px solid var(--border);
             padding: 10px;
-            max-height: 300px;
+            height: 140px;
             overflow-y: auto;
-            font-size: 11px;
-            color: var(--text-muted);
+            color: var(--text-dim);
+            font-size: 8px;
             white-space: pre-wrap;
             word-break: break-all;
         }
@@ -232,126 +218,145 @@
             background: var(--panel);
             border: 1px solid var(--accent);
             color: var(--accent);
-            padding: 10px 14px;
-            font-size: 11px;
+            padding: 10px;
+            font-size: 9px;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s;
         }
 
-        .toast.show {
-            opacity: 1;
-        }
-
-        .toast.err {
-            border-color: #ff4444;
-            color: #ff4444;
-        }
-
-        .progress {
-            height: 2px;
-            background: var(--border);
-            width: 100%;
-            margin-top: 12px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 0.1s ease;
-        }
+        .toast.show { opacity: 1; }
+        .toast.err { border-color: #ff3333; color: #ff3333; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>MULTICRAFT VOXELIZER</h1>
-        <span class="version">v2.0</span>
+        <h1>MULTICRAFT 3D CONVERTER</h1>
     </header>
 
-    <div class="nav">
-        <button id="tab1Btn" class="nav-btn active">1. ЗАГРУЗКА</button>
-        <button id="tab2Btn" class="nav-btn" disabled>2. ПРОСМОТР</button>
-        <button id="tab3Btn" class="nav-btn" disabled>3. КОМАНДЫ</button>
-    </div>
-
-    <main>
-        <div id="tab1" class="tab-panel active">
-            <div class="box">
-                <div class="box-title">Файл модели</div>
-                <label>Форматы: OBJ, GLB, GLTF, STL</label>
-                <input type="file" id="modelFile" accept=".obj,.glb,.gltf,.stl" />
+    <div class="layout">
+        <!-- Левая панель: Параметры -->
+        <div class="sidebar">
+            <div class="panel">
+                <div class="panel-title">1. Файл 3D-модели</div>
+                <div class="field">
+                    <label>Форматы: OBJ, GLB, GLTF, STL</label>
+                    <input type="file" id="modelFile" accept=".obj,.glb,.gltf,.stl">
+                </div>
             </div>
 
-            <div class="box">
-                <div class="box-title">Настройки конвертации</div>
+            <div class="panel">
+                <div class="panel-title">2. Выбор блоков</div>
                 
-                <label>Детализация <span class="val" id="resVal">0.5</span></label>
-                <input type="range" id="resolution" min="0.1" max="1.0" step="0.05" value="0.5" />
+                <div class="field">
+                    <label>Форма блоков:</label>
+                    <select id="shapeSelect">
+                        <option value="full">Только цельные</option>
+                        <option value="cut">С нарезными (Плиты)</option>
+                    </select>
+                </div>
 
-                <label>Размер <span class="val" id="scaleVal">1</span></label>
-                <input type="range" id="scale" min="1" max="5" step="1" value="1" />
+                <div class="field">
+                    <label>Категория материалов:</label>
+                    <select id="categorySelect">
+                        <option value="all">Все блоки</option>
+                        <option value="stone">Камень</option>
+                        <option value="color">Разноцветные</option>
+                    </select>
+                </div>
 
-                <label>Режим команд</label>
-                <select id="cmdMode">
-                    <option value="short">Быстрые команды (/shift, /s)</option>
-                    <option value="standard">Стандартные (//pos, //set)</option>
-                </select>
-            </div>
-
-            <div class="box">
-                <button class="btn btn-main" id="startBtn">Обработать модель</button>
-                <div class="progress"><div class="progress-bar" id="pBar"></div></div>
-            </div>
-        </div>
-
-        <div id="tab2" class="tab-panel">
-            <div class="box">
-                <div class="box-title">Окно просмотра</div>
-                <div id="canvas3d"></div>
-                <div class="btn-group">
-                    <button class="btn" id="btnShowOrig">Исходник</button>
-                    <button class="btn" id="btnShowVox">Блоки</button>
-                    <button class="btn" id="btnResetCam">Сброс камеры</button>
+                <div class="field">
+                    <label>Режим команд:</label>
+                    <select id="cmdMode">
+                        <option value="short">Быстрые (/shift, /s)</option>
+                        <option value="standard">Стандартные (//pos, //set)</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="box">
-                <div class="box-title">Информация</div>
+            <div class="panel">
+                <div class="panel-title">3. Размеры и детальность</div>
+                
+                <div class="field">
+                    <div class="slider-row">
+                        <span>Детализация:</span>
+                        <span id="resVal" class="val-tag">0.5</span>
+                    </div>
+                    <input type="range" id="resolution" min="0.1" max="1.0" step="0.05" value="0.5">
+                </div>
+
+                <div class="field">
+                    <div class="slider-row">
+                        <span>Масштаб:</span>
+                        <span id="scaleVal" class="val-tag">1x</span>
+                    </div>
+                    <input type="range" id="scale" min="1" max="5" step="1" value="1">
+                </div>
+
+                <button class="btn-main" id="processBtn">Обработать модель</button>
+            </div>
+        </div>
+
+        <!-- Правая панель: Просмотр и Результат -->
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-title">Предварительный просмотр</div>
+                <div class="viewport-box">
+                    <canvas id="canvas3d"></canvas>
+                </div>
+                
+                <div class="viewport-controls">
+                    <button id="toggleOrigBtn">Оригинал</button>
+                    <button id="toggleVoxBtn">Блоки</button>
+                    <button id="resetCamBtn">Сброс камеры</button>
+                </div>
+
+                <div class="field" style="margin-top: 12px;">
+                    <div class="slider-row">
+                        <span>Яркость света:</span>
+                        <span id="lightVal" class="val-tag">100%</span>
+                    </div>
+                    <input type="range" id="lightSlider" min="20" max="200" step="10" value="100">
+                </div>
+
+                <div class="field">
+                    <div class="slider-row">
+                        <span>Вращение:</span>
+                        <span id="speedVal" class="val-tag">Выкл</span>
+                    </div>
+                    <input type="range" id="speedSlider" min="0" max="5" step="0.5" value="0">
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Статистика</div>
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-item">
                         <label>Всего блоков</label>
-                        <div class="stat-num" id="countBlocks">0</div>
+                        <div class="stat-val" id="statCount">0</div>
                     </div>
-                    <div class="stat-card">
-                        <label>Ширина</label>
-                        <div class="stat-num" id="sizeX">0</div>
+                    <div class="stat-item">
+                        <label>Ширина X</label>
+                        <div class="stat-val" id="statX">0</div>
                     </div>
-                    <div class="stat-card">
-                        <label>Высота</label>
-                        <div class="stat-num" id="sizeY">0</div>
+                    <div class="stat-item">
+                        <label>Высота Y</label>
+                        <div class="stat-val" id="statY">0</div>
                     </div>
                 </div>
             </div>
 
-            <div class="box">
-                <button class="btn btn-main" id="toTab3Btn">Перейти к командам</button>
-            </div>
-        </div>
-
-        <div id="tab3" class="tab-panel">
-            <div class="box">
-                <div class="box-title">Готовые команды</div>
-                <div class="commands-list" id="cmdList">Команды еще не созданы</div>
-                <div class="btn-group">
-                    <button class="btn btn-main" id="copyBtn">Копировать текст</button>
-                    <button class="btn" id="downloadBtn">Скачать файл .txt</button>
+            <div class="panel">
+                <div class="panel-title">Команды WorldEdit</div>
+                <div class="cmd-out" id="cmdOutput">Загрузите модель и нажмите Обработать</div>
+                <div class="viewport-controls" style="margin-top: 8px;">
+                    <button class="btn-main" id="copyBtn">Скопировать текст</button>
+                    <button id="downloadBtn">Скачать .txt</button>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
     <div id="toast" class="toast"></div>
 
@@ -362,134 +367,169 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
 
     <script>
-    const BLOCK_PALETTE = {
-        'default:stone': [128, 128, 128],
-        'default:cobble': [100, 100, 100],
-        'default:brick': [160, 70, 50],
-        'default:sand': [220, 200, 140],
-        'default:dirt': [100, 70, 40],
-        'default:wood': [110, 80, 40],
-        'default:glass': [200, 220, 230],
-        'wool:white': [240, 240, 240],
-        'wool:black': [20, 20, 20],
-        'wool:red': [200, 40, 40],
-        'wool:green': [40, 160, 40],
-        'wool:blue': [40, 60, 200],
-        'wool:yellow': [230, 200, 40],
-        'wool:orange': [230, 120, 30]
-    };
+    // Палитра блоков MultiCraft
+    const PALETTE = [
+        // Камень (Цельные)
+        { id: 'default:stone', rgb: [128, 128, 128], cat: 'stone', shape: 'full' },
+        { id: 'default:cobble', rgb: [100, 100, 100], cat: 'stone', shape: 'full' },
+        { id: 'default:brick', rgb: [160, 70, 50], cat: 'stone', shape: 'full' },
+        { id: 'default:sandstone', rgb: [220, 200, 140], cat: 'stone', shape: 'full' },
+        { id: 'default:desert_stone', rgb: [150, 100, 60], cat: 'stone', shape: 'full' },
+        
+        // Камень (Нарезные)
+        { id: 'stairs:slab_stone', rgb: [128, 128, 128], cat: 'stone', shape: 'cut' },
+        { id: 'stairs:slab_cobble', rgb: [100, 100, 100], cat: 'stone', shape: 'cut' },
+        { id: 'stairs:slab_brick', rgb: [160, 70, 50], cat: 'stone', shape: 'cut' },
 
-    function findClosestBlock(r, g, b) {
-        let selected = 'default:stone';
+        // Цветные (Цельные)
+        { id: 'wool:white', rgb: [240, 240, 240], cat: 'color', shape: 'full' },
+        { id: 'wool:black', rgb: [20, 20, 20], cat: 'color', shape: 'full' },
+        { id: 'wool:red', rgb: [200, 40, 40], cat: 'color', shape: 'full' },
+        { id: 'wool:green', rgb: [40, 160, 40], cat: 'color', shape: 'full' },
+        { id: 'wool:blue', rgb: [40, 60, 200], cat: 'color', shape: 'full' },
+        { id: 'wool:yellow', rgb: [240, 210, 40], cat: 'color', shape: 'full' },
+        { id: 'wool:orange', rgb: [230, 120, 30], cat: 'color', shape: 'full' },
+        { id: 'wool:violet', rgb: [130, 40, 180], cat: 'color', shape: 'full' },
+
+        // Цветные (Нарезные)
+        { id: 'stairs:slab_wool_white', rgb: [240, 240, 240], cat: 'color', shape: 'cut' },
+        { id: 'stairs:slab_wool_red', rgb: [200, 40, 40], cat: 'color', shape: 'cut' },
+        { id: 'stairs:slab_wool_blue', rgb: [40, 60, 200], cat: 'color', shape: 'cut' },
+        { id: 'stairs:slab_wool_yellow', rgb: [240, 210, 40], cat: 'color', shape: 'cut' }
+    ];
+
+    function getNearestBlock(r, g, b, categoryFilter, shapeFilter) {
+        let bestMatch = 'default:stone';
         let minDiff = Infinity;
 
-        for (const [id, rgb] of Object.entries(BLOCK_PALETTE)) {
+        const filtered = PALETTE.filter(item => {
+            const matchCat = (categoryFilter === 'all' || item.cat === categoryFilter);
+            const matchShape = (shapeFilter === 'full' ? item.shape === 'full' : true);
+            return matchCat && matchShape;
+        });
+
+        const list = filtered.length > 0 ? filtered : PALETTE;
+
+        for (const block of list) {
             const diff = Math.sqrt(
-                Math.pow(r - rgb[0], 2) +
-                Math.pow(g - rgb[1], 2) +
-                Math.pow(b - rgb[2], 2)
+                Math.pow(r - block.rgb[0], 2) +
+                Math.pow(g - block.rgb[1], 2) +
+                Math.pow(b - block.rgb[2], 2)
             );
             if (diff < minDiff) {
                 minDiff = diff;
-                selected = id;
+                bestMatch = block.id;
             }
         }
-        return selected;
+        return bestMatch;
     }
 
+    // 3D Движок
     let scene, camera, renderer, controls;
-    let mainMesh = null, voxelMesh = null;
-    let convertedData = null;
+    let loadedMesh = null, voxMesh = null;
+    let convertedVoxels = [];
 
-    function initEngine() {
-        const target = document.getElementById('canvas3d');
+    function init3D() {
+        const canvas = document.getElementById('canvas3d');
+        const box = canvas.parentElement;
+
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x080808);
+        scene.background = new THREE.Color(0x000000);
 
-        camera = new THREE.PerspectiveCamera(60, target.clientWidth / target.clientHeight, 0.1, 1000);
-        camera.position.set(0, 2, 5);
+        camera = new THREE.PerspectiveCamera(45, box.clientWidth / box.clientHeight, 0.1, 1000);
+        camera.position.set(3, 3, 5);
 
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(target.clientWidth, target.clientHeight);
-        target.appendChild(renderer.domElement);
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(box.clientWidth, box.clientHeight);
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
 
-        const light1 = new THREE.AmbientLight(0xffffff, 0.7);
-        const light2 = new THREE.DirectionalLight(0xffffff, 0.5);
-        light2.position.set(5, 10, 5);
-        scene.add(light1, light2);
+        const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
+        ambLight.name = 'ambLight';
+        scene.add(ambLight);
 
-        function renderLoop() {
-            requestAnimationFrame(renderLoop);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(5, 10, 7);
+        dirLight.name = 'dirLight';
+        scene.add(dirLight);
+
+        function loop() {
+            requestAnimationFrame(loop);
+            
+            const speed = parseFloat(document.getElementById('speedSlider').value);
+            if (speed > 0 && voxMesh) {
+                voxMesh.rotation.y += speed * 0.01;
+            }
+
             controls.update();
             renderer.render(scene, camera);
         }
-        renderLoop();
+        loop();
     }
 
-    function openFile(file) {
+    function loadFile(file) {
         if (!file) return;
-        msg('Чтение файла...');
+        showToast('Чтение файла...');
 
         const url = URL.createObjectURL(file);
         const ext = file.name.split('.').pop().toLowerCase();
 
-        const done = (obj) => {
+        const onSuccess = (obj) => {
             URL.revokeObjectURL(url);
-            displayModel(obj);
-            msg('Файл загружен');
-            document.getElementById('tab2Btn').disabled = false;
+            setupSceneModel(obj);
+            showToast('Файл загружен');
         };
 
-        const fail = (err) => {
+        const onError = (err) => {
             URL.revokeObjectURL(url);
-            msg('Ошибка чтения файла', true);
+            showToast('Ошибка загрузки файла', true);
             console.error(err);
         };
 
-        if (ext === 'obj') new THREE.OBJLoader().load(url, done, null, fail);
-        else if (ext === 'glb' || ext === 'gltf') new THREE.GLTFLoader().load(url, g => done(g.scene), null, fail);
+        if (ext === 'obj') new THREE.OBJLoader().load(url, onSuccess, null, onError);
+        else if (ext === 'glb' || ext === 'gltf') new THREE.GLTFLoader().load(url, g => onSuccess(g.scene), null, onError);
         else if (ext === 'stl') new THREE.STLLoader().load(url, geom => {
             geom.center();
-            done(new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: 0x888888 })));
-        }, null, fail);
-        else msg('Формат не поддерживается', true);
+            onSuccess(new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: 0x888888 })));
+        }, null, onError);
+        else showToast('Неподдерживаемый формат', true);
     }
 
-    function displayModel(object) {
-        if (mainMesh) scene.remove(mainMesh);
-        if (voxelMesh) scene.remove(voxelMesh);
+    function setupSceneModel(model) {
+        if (loadedMesh) scene.remove(loadedMesh);
+        if (voxMesh) scene.remove(voxMesh);
 
-        const box = new THREE.Box3().setFromObject(object);
+        const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        object.position.sub(center);
+        model.position.sub(center);
         const maxDim = Math.max(size.x, size.y, size.z);
-        if (maxDim > 0) object.scale.multiplyScalar(3 / maxDim);
+        if (maxDim > 0) model.scale.multiplyScalar(3 / maxDim);
 
-        mainMesh = object;
-        scene.add(mainMesh);
+        loadedMesh = model;
+        scene.add(loadedMesh);
 
-        camera.position.set(0, 0, 5);
+        camera.position.set(3, 3, 5);
         controls.target.set(0, 0, 0);
         controls.update();
     }
 
-    function processModel() {
-        if (!mainMesh) {
-            msg('Сначала загрузите модель', true);
+    function processVoxelization() {
+        if (!loadedMesh) {
+            showToast('Загрузите 3D-модель', true);
             return;
         }
 
-        setProgress(20);
         const step = parseFloat(document.getElementById('resolution').value);
-        const scaleVal = parseInt(document.getElementById('scale').value);
+        const scale = parseInt(document.getElementById('scale').value);
+        const cat = document.getElementById('categorySelect').value;
+        const shape = document.getElementById('shapeSelect').value;
 
-        const blocksMap = new Map();
+        const voxelMap = new Map();
 
-        mainMesh.traverse((child) => {
+        loadedMesh.traverse((child) => {
             if (child.isMesh && child.geometry) {
                 let color = [128, 128, 128];
                 if (child.material && child.material.color) {
@@ -502,46 +542,36 @@
 
                 const pos = child.geometry.attributes.position.array;
                 for (let i = 0; i < pos.length; i += 3) {
-                    const vx = Math.round((pos[i] * scaleVal) / step);
-                    const vy = Math.round((pos[i+1] * scaleVal) / step);
-                    const vz = Math.round((pos[i+2] * scaleVal) / step);
+                    const x = Math.round((pos[i] * scale) / step);
+                    const y = Math.round((pos[i+1] * scale) / step);
+                    const z = Math.round((pos[i+2] * scale) / step);
 
-                    const key = `${vx},${vy},${vz}`;
-                    if (!blocksMap.has(key)) {
-                        blocksMap.set(key, findClosestBlock(color[0], color[1], color[2]));
+                    const key = `${x},${y},${z}`;
+                    if (!voxelMap.has(key)) {
+                        const blockId = getNearestBlock(color[0], color[1], color[2], cat, shape);
+                        voxelMap.set(key, { x, y, z, blockId });
                     }
                 }
             }
         });
 
-        setProgress(70);
+        convertedVoxels = Array.from(voxelMap.values());
+        renderVoxelPreview(convertedVoxels);
+        generateCommands();
 
-        const blocksArray = [];
-        blocksMap.forEach((blockId, key) => {
-            const [x, y, z] = key.split(',').map(Number);
-            blocksArray.push({ x, y, z, blockId });
-        });
-
-        convertedData = blocksArray;
-        renderVoxels(blocksArray);
-
-        document.getElementById('countBlocks').textContent = blocksArray.length;
-        document.getElementById('tab3Btn').disabled = false;
-
-        setProgress(100);
-        msg('Обработка завершена');
-        setTimeout(() => setProgress(0), 1000);
+        document.getElementById('statCount').textContent = convertedVoxels.length;
+        showToast('Конвертация завершена');
     }
 
-    function renderVoxels(blocks) {
-        if (voxelMesh) scene.remove(voxelMesh);
+    function renderVoxelPreview(voxels) {
+        if (voxMesh) scene.remove(voxMesh);
 
         const geom = new THREE.BufferGeometry();
         const positions = [];
 
-        blocks.forEach(b => {
-            const px = b.x * 0.1, py = b.y * 0.1, pz = b.z * 0.1;
-            const s = 0.04;
+        voxels.forEach(v => {
+            const px = v.x * 0.08, py = v.y * 0.08, pz = v.z * 0.08;
+            const s = 0.035;
             positions.push(
                 px-s, py-s, pz-s,  px+s, py-s, pz-s,
                 px+s, py+s, pz-s,  px-s, py+s, pz-s,
@@ -551,12 +581,12 @@
 
         geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
         const mat = new THREE.MeshBasicMaterial({ color: 0x00ff41, wireframe: true });
-        voxelMesh = new THREE.Mesh(geom, mat);
-        scene.add(voxelMesh);
+        voxMesh = new THREE.Mesh(geom, mat);
+        scene.add(voxMesh);
     }
 
-    function makeCommands() {
-        if (!convertedData || convertedData.length === 0) return;
+    function generateCommands() {
+        if (!convertedVoxels.length) return;
 
         const mode = document.getElementById('cmdMode').value;
         let lines = [];
@@ -564,32 +594,24 @@
         if (mode === 'short') {
             lines.push('/1');
             let cx = 0, cy = 0, cz = 0;
-            convertedData.forEach(b => {
-                if (b.x !== cx) { lines.push(`/shift x ${b.x - cx}`); cx = b.x; }
-                if (b.y !== cy) { lines.push(`/shift y ${b.y - cy}`); cy = b.y; }
-                if (b.z !== cz) { lines.push(`/shift z ${b.z - cz}`); cz = b.z; }
-                lines.push(`/s ${b.blockId}`);
+            convertedVoxels.forEach(v => {
+                if (v.x !== cx) { lines.push(`/shift x ${v.x - cx}`); cx = v.x; }
+                if (v.y !== cy) { lines.push(`/shift y ${v.y - cy}`); cy = v.y; }
+                if (v.z !== cz) { lines.push(`/shift z ${v.z - cz}`); cz = v.z; }
+                lines.push(`/s ${v.blockId}`);
             });
         } else {
-            convertedData.forEach(b => {
-                lines.push(`//pos1 ${b.x},${b.y},${b.z}`);
-                lines.push(`//pos2 ${b.x},${b.y},${b.z}`);
-                lines.push(`//set ${b.blockId}`);
+            convertedVoxels.forEach(v => {
+                lines.push(`//pos1 ${v.x},${v.y},${v.z}`);
+                lines.push(`//pos2 ${v.x},${v.y},${v.z}`);
+                lines.push(`//set ${v.blockId}`);
             });
         }
 
-        const text = lines.join('\n');
-        document.getElementById('cmdList').textContent = text;
+        document.getElementById('cmdOutput').textContent = lines.join('\n');
     }
 
-    function showTab(id) {
-        document.querySelectorAll('.tab-panel').forEach(e => e.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.getElementById(id + 'Btn').classList.add('active');
-    }
-
-    function msg(text, isErr) {
+    function showToast(text, isErr) {
         const t = document.getElementById('toast');
         t.textContent = text;
         t.classList.toggle('err', !!isErr);
@@ -597,41 +619,45 @@
         setTimeout(() => t.classList.remove('show'), 2000);
     }
 
-    function setProgress(val) {
-        document.getElementById('pBar').style.width = val + '%';
-    }
-
+    // Слушатели событий
     document.getElementById('resolution').addEventListener('input', e => document.getElementById('resVal').textContent = e.target.value);
-    document.getElementById('scale').addEventListener('input', e => document.getElementById('scaleVal').textContent = e.target.value);
+    document.getElementById('scale').addEventListener('input', e => document.getElementById('scaleVal').textContent = e.target.value + 'x');
 
-    document.getElementById('modelFile').addEventListener('change', e => { openFile(e.target.files[0]); e.target.value = ''; });
-    document.getElementById('startBtn').addEventListener('click', () => { processModel(); showTab('tab2'); });
-    document.getElementById('toTab3Btn').addEventListener('click', () => { makeCommands(); showTab('tab3'); });
+    document.getElementById('lightSlider').addEventListener('input', e => {
+        const val = e.target.value;
+        document.getElementById('lightVal').textContent = val + '%';
+        const amb = scene.getObjectByName('ambLight');
+        if (amb) amb.intensity = (val / 100) * 0.8;
+    });
 
-    document.getElementById('tab1Btn').addEventListener('click', () => showTab('tab1'));
-    document.getElementById('tab2Btn').addEventListener('click', () => showTab('tab2'));
-    document.getElementById('tab3Btn').addEventListener('click', () => showTab('tab3'));
+    document.getElementById('speedSlider').addEventListener('input', e => {
+        const val = e.target.value;
+        document.getElementById('speedVal').textContent = val == 0 ? 'Выкл' : val;
+    });
 
-    document.getElementById('btnShowOrig').addEventListener('click', () => { if (mainMesh) mainMesh.visible = !mainMesh.visible; });
-    document.getElementById('btnShowVox').addEventListener('click', () => { if (voxelMesh) voxelMesh.visible = !voxelMesh.visible; });
-    document.getElementById('btnResetCam').addEventListener('click', () => { camera.position.set(0, 0, 5); controls.target.set(0, 0, 0); });
+    document.getElementById('modelFile').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+    document.getElementById('processBtn').addEventListener('click', processVoxelization);
+
+    document.getElementById('toggleOrigBtn').addEventListener('click', () => { if (loadedMesh) loadedMesh.visible = !loadedMesh.visible; });
+    document.getElementById('toggleVoxBtn').addEventListener('click', () => { if (voxMesh) voxMesh.visible = !voxMesh.visible; });
+    document.getElementById('resetCamBtn').addEventListener('click', () => { camera.position.set(3, 3, 5); controls.target.set(0, 0, 0); });
 
     document.getElementById('copyBtn').addEventListener('click', () => {
-        const text = document.getElementById('cmdList').textContent;
-        navigator.clipboard.writeText(text).then(() => msg('Скопировано в буфер'));
+        const txt = document.getElementById('cmdOutput').textContent;
+        navigator.clipboard.writeText(txt).then(() => showToast('Скопировано в буфер'));
     });
 
     document.getElementById('downloadBtn').addEventListener('click', () => {
-        const text = document.getElementById('cmdList').textContent;
-        const blob = new Blob([text], { type: 'text/plain' });
+        const txt = document.getElementById('cmdOutput').textContent;
+        const blob = new Blob([txt], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'multicraft_commands.txt';
+        a.download = 'multicraft_build.txt';
         a.click();
     });
 
     window.addEventListener('DOMContentLoaded', () => {
-        initEngine();
+        init3D();
     });
     </script>
 </body>
