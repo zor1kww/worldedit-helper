@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MultiCraft 3D Converter</title>
+    <title>MultiCraft 3D → Блоки</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -178,6 +178,7 @@
             display: flex;
             gap: 8px;
             margin-top: 8px;
+            flex-wrap: wrap;
         }
 
         .stats-grid {
@@ -211,6 +212,27 @@
             word-break: break-all;
         }
 
+        .part-selector {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+
+        .part-btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 4px 10px;
+            font-size: 8px;
+            cursor: pointer;
+        }
+
+        .part-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
         .toast {
             position: fixed;
             bottom: 16px;
@@ -223,67 +245,57 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s;
+            z-index: 1000;
         }
 
         .toast.show { opacity: 1; }
         .toast.err { border-color: #ff3333; color: #ff3333; }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            transition: width 0.1s;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>MULTICRAFT 3D CONVERTER</h1>
+        <h1>MULTICRAFT 3D → БЛОКИ</h1>
     </header>
 
     <div class="layout">
         <!-- Левая панель: Параметры -->
         <div class="sidebar">
             <div class="panel">
-                <div class="panel-title">1. Файл 3D-модели</div>
+                <div class="panel-title">1. Загрузка модели</div>
                 <div class="field">
                     <label>Форматы: OBJ, GLB, GLTF, STL</label>
                     <input type="file" id="modelFile" accept=".obj,.glb,.gltf,.stl">
                 </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-title">2. Выбор блоков</div>
-                
-                <div class="field">
-                    <label>Форма блоков:</label>
-                    <select id="shapeSelect">
-                        <option value="full">Только цельные</option>
-                        <option value="cut">С нарезными (Плиты)</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Категория материалов:</label>
-                    <select id="categorySelect">
-                        <option value="all">Все блоки</option>
-                        <option value="stone">Камень</option>
-                        <option value="color">Разноцветные</option>
-                    </select>
-                </div>
-
-                <div class="field">
-                    <label>Режим команд:</label>
-                    <select id="cmdMode">
-                        <option value="short">Быстрые (/shift, /s)</option>
-                        <option value="standard">Стандартные (//pos, //set)</option>
-                    </select>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
                 </div>
             </div>
 
             <div class="panel">
-                <div class="panel-title">3. Размеры и детальность</div>
+                <div class="panel-title">2. Настройки вокселизации</div>
                 
                 <div class="field">
                     <div class="slider-row">
                         <span>Детализация:</span>
                         <span id="resVal" class="val-tag">0.5</span>
                     </div>
-                    <input type="range" id="resolution" min="0.1" max="1.0" step="0.05" value="0.5">
+                    <input type="range" id="resolution" min="0.05" max="1.0" step="0.05" value="0.5">
                 </div>
 
                 <div class="field">
@@ -294,38 +306,30 @@
                     <input type="range" id="scale" min="1" max="5" step="1" value="1">
                 </div>
 
-                <button class="btn-main" id="processBtn">Обработать модель</button>
+                <div class="field">
+                    <label>Режим команд:</label>
+                    <select id="cmdMode">
+                        <option value="short">Быстрые (/shift, /s)</option>
+                        <option value="standard">Стандартные (//pos, //set)</option>
+                    </select>
+                </div>
+
+                <button class="btn-main" id="processBtn">🔨 Обработать модель</button>
             </div>
         </div>
 
         <!-- Правая панель: Просмотр и Результат -->
         <div class="main-content">
             <div class="panel">
-                <div class="panel-title">Предварительный просмотр</div>
+                <div class="panel-title">3D-предпросмотр</div>
                 <div class="viewport-box">
                     <canvas id="canvas3d"></canvas>
                 </div>
                 
                 <div class="viewport-controls">
-                    <button id="toggleOrigBtn">Оригинал</button>
-                    <button id="toggleVoxBtn">Блоки</button>
-                    <button id="resetCamBtn">Сброс камеры</button>
-                </div>
-
-                <div class="field" style="margin-top: 12px;">
-                    <div class="slider-row">
-                        <span>Яркость света:</span>
-                        <span id="lightVal" class="val-tag">100%</span>
-                    </div>
-                    <input type="range" id="lightSlider" min="20" max="200" step="10" value="100">
-                </div>
-
-                <div class="field">
-                    <div class="slider-row">
-                        <span>Вращение:</span>
-                        <span id="speedVal" class="val-tag">Выкл</span>
-                    </div>
-                    <input type="range" id="speedSlider" min="0" max="5" step="0.5" value="0">
+                    <button class="btn-main" id="toggleOrigBtn">Оригинал</button>
+                    <button class="btn-main" id="toggleVoxBtn">Блоки</button>
+                    <button class="btn-main" id="resetCamBtn">Сброс</button>
                 </div>
             </div>
 
@@ -337,11 +341,11 @@
                         <div class="stat-val" id="statCount">0</div>
                     </div>
                     <div class="stat-item">
-                        <label>Ширина X</label>
+                        <label>Размер X</label>
                         <div class="stat-val" id="statX">0</div>
                     </div>
                     <div class="stat-item">
-                        <label>Высота Y</label>
+                        <label>Размер Y</label>
                         <div class="stat-val" id="statY">0</div>
                     </div>
                 </div>
@@ -349,10 +353,11 @@
 
             <div class="panel">
                 <div class="panel-title">Команды WorldEdit</div>
+                <div class="part-selector" id="partSelector"></div>
                 <div class="cmd-out" id="cmdOutput">Загрузите модель и нажмите Обработать</div>
                 <div class="viewport-controls" style="margin-top: 8px;">
-                    <button class="btn-main" id="copyBtn">Скопировать текст</button>
-                    <button id="downloadBtn">Скачать .txt</button>
+                    <button class="btn-main" id="copyBtn">📋 Скопировать всё</button>
+                    <button class="btn-main" id="downloadBtn">💾 Скачать .txt</button>
                 </div>
             </div>
         </div>
@@ -367,55 +372,118 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
 
     <script>
-    // Палитра блоков MultiCraft
+    // ================================================================
+    // 1. ПОЛНАЯ ПАЛИТРА БЛОКОВ MULTICRAFT
+    // ================================================================
     const PALETTE = [
-        // Камень (Цельные)
-        { id: 'default:stone', rgb: [128, 128, 128], cat: 'stone', shape: 'full' },
-        { id: 'default:cobble', rgb: [100, 100, 100], cat: 'stone', shape: 'full' },
-        { id: 'default:brick', rgb: [160, 70, 50], cat: 'stone', shape: 'full' },
-        { id: 'default:sandstone', rgb: [220, 200, 140], cat: 'stone', shape: 'full' },
-        { id: 'default:desert_stone', rgb: [150, 100, 60], cat: 'stone', shape: 'full' },
-        
-        // Камень (Нарезные)
+        // === БЕТОН (concrete) — все 16 цветов ===
+        { id: 'concrete:concrete_white', rgb: [207, 213, 214], cat: 'concrete' },
+        { id: 'concrete:concrete_grey', rgb: [125, 125, 115], cat: 'concrete' },
+        { id: 'concrete:concrete_dark_grey', rgb: [55, 58, 62], cat: 'concrete' },
+        { id: 'concrete:concrete_black', rgb: [8, 10, 15], cat: 'concrete' },
+        { id: 'concrete:concrete_violet', rgb: [100, 32, 156], cat: 'concrete' },
+        { id: 'concrete:concrete_blue', rgb: [45, 47, 143], cat: 'concrete' },
+        { id: 'concrete:concrete_cyan', rgb: [21, 119, 136], cat: 'concrete' },
+        { id: 'concrete:concrete_dark_green', rgb: [73, 91, 36], cat: 'concrete' },
+        { id: 'concrete:concrete_green', rgb: [94, 169, 25], cat: 'concrete' },
+        { id: 'concrete:concrete_yellow', rgb: [241, 175, 21], cat: 'concrete' },
+        { id: 'concrete:concrete_brown', rgb: [96, 60, 32], cat: 'concrete' },
+        { id: 'concrete:concrete_orange', rgb: [224, 97, 1], cat: 'concrete' },
+        { id: 'concrete:concrete_red', rgb: [142, 33, 33], cat: 'concrete' },
+        { id: 'concrete:concrete_magenta', rgb: [169, 48, 159], cat: 'concrete' },
+        { id: 'concrete:concrete_pink', rgb: [214, 101, 143], cat: 'concrete' },
+
+        // === ШЕРСТЬ (wool) — все 15 цветов ===
+        { id: 'wool:white', rgb: [234, 236, 237], cat: 'wool' },
+        { id: 'wool:grey', rgb: [142, 142, 135], cat: 'wool' },
+        { id: 'wool:dark_grey', rgb: [63, 68, 72], cat: 'wool' },
+        { id: 'wool:black', rgb: [21, 21, 26], cat: 'wool' },
+        { id: 'wool:violet', rgb: [122, 42, 173], cat: 'wool' },
+        { id: 'wool:blue', rgb: [53, 57, 157], cat: 'wool' },
+        { id: 'wool:cyan', rgb: [21, 138, 145], cat: 'wool' },
+        { id: 'wool:dark_green', rgb: [85, 110, 28], cat: 'wool' },
+        { id: 'wool:green', rgb: [112, 185, 26], cat: 'wool' },
+        { id: 'wool:yellow', rgb: [249, 198, 40], cat: 'wool' },
+        { id: 'wool:brown', rgb: [114, 72, 41], cat: 'wool' },
+        { id: 'wool:orange', rgb: [241, 118, 20], cat: 'wool' },
+        { id: 'wool:red', rgb: [161, 39, 35], cat: 'wool' },
+        { id: 'wool:magenta', rgb: [190, 69, 180], cat: 'wool' },
+        { id: 'wool:pink', rgb: [238, 141, 172], cat: 'wool' },
+
+        // === ОБОЖЖЁННАЯ ГЛИНА (hardened_clay) ===
+        { id: 'hardened_clay:white', rgb: [210, 178, 161], cat: 'clay' },
+        { id: 'hardened_clay:grey', rgb: [135, 107, 98], cat: 'clay' },
+        { id: 'hardened_clay:dark_grey', rgb: [58, 42, 36], cat: 'clay' },
+        { id: 'hardened_clay:black', rgb: [37, 23, 16], cat: 'clay' },
+        { id: 'hardened_clay:violet', rgb: [118, 70, 86], cat: 'clay' },
+        { id: 'hardened_clay:blue', rgb: [74, 60, 91], cat: 'clay' },
+        { id: 'hardened_clay:cyan', rgb: [87, 91, 91], cat: 'clay' },
+        { id: 'hardened_clay:dark_green', rgb: [76, 83, 42], cat: 'clay' },
+        { id: 'hardened_clay:green', rgb: [104, 118, 53], cat: 'clay' },
+        { id: 'hardened_clay:yellow', rgb: [186, 133, 35], cat: 'clay' },
+        { id: 'hardened_clay:brown', rgb: [77, 51, 36], cat: 'clay' },
+        { id: 'hardened_clay:orange', rgb: [162, 84, 38], cat: 'clay' },
+        { id: 'hardened_clay:red', rgb: [143, 61, 47], cat: 'clay' },
+        { id: 'hardened_clay:magenta', rgb: [150, 88, 109], cat: 'clay' },
+        { id: 'hardened_clay:pink', rgb: [162, 78, 79], cat: 'clay' },
+
+        // === КАМЕНЬ (default) ===
+        { id: 'default:stone', rgb: [128, 128, 128], cat: 'stone' },
+        { id: 'default:cobble', rgb: [100, 100, 100], cat: 'stone' },
+        { id: 'default:brick', rgb: [160, 70, 50], cat: 'stone' },
+        { id: 'default:sandstone', rgb: [220, 200, 140], cat: 'stone' },
+        { id: 'default:desert_stone', rgb: [150, 100, 60], cat: 'stone' },
+
+        // === ДЕРЕВО ===
+        { id: 'default:wood', rgb: [160, 120, 80], cat: 'wood' },
+        { id: 'default:pine_wood', rgb: [140, 100, 60], cat: 'wood' },
+        { id: 'default:jungle_wood', rgb: [180, 100, 50], cat: 'wood' },
+
+        // === СТУПЕНЬКИ (плиты) ===
         { id: 'stairs:slab_stone', rgb: [128, 128, 128], cat: 'stone', shape: 'cut' },
         { id: 'stairs:slab_cobble', rgb: [100, 100, 100], cat: 'stone', shape: 'cut' },
         { id: 'stairs:slab_brick', rgb: [160, 70, 50], cat: 'stone', shape: 'cut' },
-
-        // Цветные (Цельные)
-        { id: 'wool:white', rgb: [240, 240, 240], cat: 'color', shape: 'full' },
-        { id: 'wool:black', rgb: [20, 20, 20], cat: 'color', shape: 'full' },
-        { id: 'wool:red', rgb: [200, 40, 40], cat: 'color', shape: 'full' },
-        { id: 'wool:green', rgb: [40, 160, 40], cat: 'color', shape: 'full' },
-        { id: 'wool:blue', rgb: [40, 60, 200], cat: 'color', shape: 'full' },
-        { id: 'wool:yellow', rgb: [240, 210, 40], cat: 'color', shape: 'full' },
-        { id: 'wool:orange', rgb: [230, 120, 30], cat: 'color', shape: 'full' },
-        { id: 'wool:violet', rgb: [130, 40, 180], cat: 'color', shape: 'full' },
-
-        // Цветные (Нарезные)
-        { id: 'stairs:slab_wool_white', rgb: [240, 240, 240], cat: 'color', shape: 'cut' },
-        { id: 'stairs:slab_wool_red', rgb: [200, 40, 40], cat: 'color', shape: 'cut' },
-        { id: 'stairs:slab_wool_blue', rgb: [40, 60, 200], cat: 'color', shape: 'cut' },
-        { id: 'stairs:slab_wool_yellow', rgb: [240, 210, 40], cat: 'color', shape: 'cut' }
+        { id: 'stairs:slab_wood', rgb: [160, 120, 80], cat: 'wood', shape: 'cut' },
     ];
 
-    function getNearestBlock(r, g, b, categoryFilter, shapeFilter) {
+    // ================================================================
+    // 2. LAB-ЦВЕТОВОЕ ПРОСТРАНСТВО (для точного подбора)
+    // ================================================================
+    function srgbToLinear(c) { c = c/255; return c <= 0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+    function rgbToXyz(r,g,b) {
+        const rl=srgbToLinear(r), gl=srgbToLinear(g), bl=srgbToLinear(b);
+        return [
+            rl*0.4124564+gl*0.3575761+bl*0.1804375,
+            rl*0.2126729+gl*0.7151522+bl*0.0721750,
+            rl*0.0193339+gl*0.1191920+bl*0.9503041
+        ];
+    }
+    function xyzToLab(x,y,z) {
+        const Xn=0.95047, Yn=1.0, Zn=1.08883;
+        function f(t){ return t>0.008856 ? Math.cbrt(t) : (7.787*t+16/116); }
+        const fx=f(x/Xn), fy=f(y/Yn), fz=f(z/Zn);
+        return [ (116*fy)-16, 500*(fx-fy), 200*(fy-fz) ];
+    }
+    function rgbToLab(r,g,b){ const [x,y,z]=rgbToXyz(r,g,b); return xyzToLab(x,y,z); }
+
+    // ================================================================
+    // 3. ПОДБОР БЛИЖАЙШЕГО БЛОКА
+    // ================================================================
+    function getNearestBlock(r, g, b, shapeFilter) {
+        // Если форма блоков = "full" — используем только цельные блоки
+        const filtered = PALETTE.filter(item => {
+            if (shapeFilter === 'full') return !item.shape || item.shape === 'full';
+            return true; // все блоки
+        });
+
+        const [L, a, bb] = rgbToLab(r, g, b);
         let bestMatch = 'default:stone';
         let minDiff = Infinity;
 
-        const filtered = PALETTE.filter(item => {
-            const matchCat = (categoryFilter === 'all' || item.cat === categoryFilter);
-            const matchShape = (shapeFilter === 'full' ? item.shape === 'full' : true);
-            return matchCat && matchShape;
-        });
-
-        const list = filtered.length > 0 ? filtered : PALETTE;
-
-        for (const block of list) {
-            const diff = Math.sqrt(
-                Math.pow(r - block.rgb[0], 2) +
-                Math.pow(g - block.rgb[1], 2) +
-                Math.pow(b - block.rgb[2], 2)
-            );
+        for (const block of filtered) {
+            const [bL, ba, bbb] = rgbToLab(block.rgb[0], block.rgb[1], block.rgb[2]);
+            const dL = L - bL, da = a - ba, db = bb - bbb;
+            const diff = dL*dL + da*da + db*db;
             if (diff < minDiff) {
                 minDiff = diff;
                 bestMatch = block.id;
@@ -424,20 +492,24 @@
         return bestMatch;
     }
 
-    // 3D Движок
+    // ================================================================
+    // 4. ОСНОВНАЯ ЛОГИКА
+    // ================================================================
     let scene, camera, renderer, controls;
     let loadedMesh = null, voxMesh = null;
     let convertedVoxels = [];
+    let allCommandParts = [];
+    let currentPartIndex = 0;
 
     function init3D() {
         const canvas = document.getElementById('canvas3d');
         const box = canvas.parentElement;
 
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000);
+        scene.background = new THREE.Color(0x0a0a0a);
 
         camera = new THREE.PerspectiveCamera(45, box.clientWidth / box.clientHeight, 0.1, 1000);
-        camera.position.set(3, 3, 5);
+        camera.position.set(4, 4, 6);
 
         renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         renderer.setSize(box.clientWidth, box.clientHeight);
@@ -445,23 +517,19 @@
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
 
-        const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
-        ambLight.name = 'ambLight';
+        const ambLight = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
         dirLight.position.set(5, 10, 7);
-        dirLight.name = 'dirLight';
         scene.add(dirLight);
+
+        // Добавляем оси для ориентира
+        const axesHelper = new THREE.AxesHelper(2);
+        scene.add(axesHelper);
 
         function loop() {
             requestAnimationFrame(loop);
-            
-            const speed = parseFloat(document.getElementById('speedSlider').value);
-            if (speed > 0 && voxMesh) {
-                voxMesh.rotation.y += speed * 0.01;
-            }
-
             controls.update();
             renderer.render(scene, camera);
         }
@@ -470,7 +538,7 @@
 
     function loadFile(file) {
         if (!file) return;
-        showToast('Чтение файла...');
+        showToast('Загрузка файла...');
 
         const url = URL.createObjectURL(file);
         const ext = file.name.split('.').pop().toLowerCase();
@@ -483,7 +551,7 @@
 
         const onError = (err) => {
             URL.revokeObjectURL(url);
-            showToast('Ошибка загрузки файла', true);
+            showToast('Ошибка загрузки', true);
             console.error(err);
         };
 
@@ -491,14 +559,15 @@
         else if (ext === 'glb' || ext === 'gltf') new THREE.GLTFLoader().load(url, g => onSuccess(g.scene), null, onError);
         else if (ext === 'stl') new THREE.STLLoader().load(url, geom => {
             geom.center();
-            onSuccess(new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: 0x888888 })));
+            const mat = new THREE.MeshStandardMaterial({ color: 0x888888, flatShading: true });
+            onSuccess(new THREE.Mesh(geom, mat));
         }, null, onError);
         else showToast('Неподдерживаемый формат', true);
     }
 
     function setupSceneModel(model) {
-        if (loadedMesh) scene.remove(loadedMesh);
-        if (voxMesh) scene.remove(voxMesh);
+        if (loadedMesh) { scene.remove(loadedMesh); loadedMesh = null; }
+        if (voxMesh) { scene.remove(voxMesh); voxMesh = null; }
 
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
@@ -511,77 +580,155 @@
         loadedMesh = model;
         scene.add(loadedMesh);
 
-        camera.position.set(3, 3, 5);
+        camera.position.set(4, 4, 6);
         controls.target.set(0, 0, 0);
         controls.update();
     }
 
     function processVoxelization() {
         if (!loadedMesh) {
-            showToast('Загрузите 3D-модель', true);
+            showToast('Сначала загрузите модель!', true);
             return;
         }
 
         const step = parseFloat(document.getElementById('resolution').value);
         const scale = parseInt(document.getElementById('scale').value);
-        const cat = document.getElementById('categorySelect').value;
-        const shape = document.getElementById('shapeSelect').value;
+        const shape = document.getElementById('cmdMode').value;
+        const shapeFilter = (shape === 'short') ? 'full' : 'all';
+
+        const progressFill = document.getElementById('progressFill');
+        progressFill.style.width = '0%';
 
         const voxelMap = new Map();
+        let processed = 0;
+        let total = 0;
 
+        // Сначала считаем общее количество вершин
+        loadedMesh.traverse((child) => {
+            if (child.isMesh && child.geometry && child.geometry.attributes.position) {
+                total += child.geometry.attributes.position.count;
+            }
+        });
+
+        if (total === 0) { showToast('Нет данных для обработки', true); return; }
+
+        // Обрабатываем модель
         loadedMesh.traverse((child) => {
             if (child.isMesh && child.geometry) {
-                let color = [128, 128, 128];
-                if (child.material && child.material.color) {
-                    color = [
-                        Math.round(child.material.color.r * 255),
-                        Math.round(child.material.color.g * 255),
-                        Math.round(child.material.color.b * 255)
-                    ];
+                const pos = child.geometry.attributes.position;
+                const col = child.geometry.attributes.color;
+                const idx = child.geometry.index;
+
+                let positions = pos.array;
+                let colors = col ? col.array : null;
+
+                // Если есть индексы — используем их
+                if (idx) {
+                    const indices = idx.array;
+                    const newPos = [];
+                    const newCol = [];
+                    for (let i = 0; i < indices.length; i++) {
+                        const pi = indices[i] * 3;
+                        newPos.push(pos.array[pi], pos.array[pi+1], pos.array[pi+2]);
+                        if (colors) {
+                            const ci = indices[i] * 3;
+                            newCol.push(colors[ci], colors[ci+1], colors[ci+2]);
+                        }
+                    }
+                    positions = new Float32Array(newPos);
+                    colors = newCol.length ? new Float32Array(newCol) : null;
                 }
 
-                const pos = child.geometry.attributes.position.array;
-                for (let i = 0; i < pos.length; i += 3) {
-                    const x = Math.round((pos[i] * scale) / step);
-                    const y = Math.round((pos[i+1] * scale) / step);
-                    const z = Math.round((pos[i+2] * scale) / step);
+                // Для каждой вершины
+                for (let i = 0; i < positions.length; i += 3) {
+                    let r = 128, g = 128, b = 128;
+                    if (colors) {
+                        r = Math.round(colors[i] * 255);
+                        g = Math.round(colors[i+1] * 255);
+                        b = Math.round(colors[i+2] * 255);
+                    } else if (child.material && child.material.color) {
+                        r = Math.round(child.material.color.r * 255);
+                        g = Math.round(child.material.color.g * 255);
+                        b = Math.round(child.material.color.b * 255);
+                    }
+
+                    const x = Math.round((positions[i] * scale) / step);
+                    const y = Math.round((positions[i+1] * scale) / step);
+                    const z = Math.round((positions[i+2] * scale) / step);
 
                     const key = `${x},${y},${z}`;
                     if (!voxelMap.has(key)) {
-                        const blockId = getNearestBlock(color[0], color[1], color[2], cat, shape);
+                        const blockId = getNearestBlock(r, g, b, shapeFilter);
                         voxelMap.set(key, { x, y, z, blockId });
+                    }
+
+                    processed++;
+                    if (processed % 1000 === 0) {
+                        progressFill.style.width = Math.min(100, (processed / total) * 100) + '%';
                     }
                 }
             }
         });
 
+        progressFill.style.width = '100%';
+
         convertedVoxels = Array.from(voxelMap.values());
+
+        // Ограничение на 100 000 блоков
+        if (convertedVoxels.length > 100000) {
+            showToast('⚠️ Слишком много блоков! Увеличьте детализацию.', true);
+            convertedVoxels = convertedVoxels.slice(0, 100000);
+        }
+
         renderVoxelPreview(convertedVoxels);
         generateCommands();
 
+        // Статистика
         document.getElementById('statCount').textContent = convertedVoxels.length;
-        showToast('Конвертация завершена');
+        if (convertedVoxels.length > 0) {
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            convertedVoxels.forEach(v => {
+                if (v.x < minX) minX = v.x;
+                if (v.x > maxX) maxX = v.x;
+                if (v.y < minY) minY = v.y;
+                if (v.y > maxY) maxY = v.y;
+            });
+            document.getElementById('statX').textContent = maxX - minX + 1;
+            document.getElementById('statY').textContent = maxY - minY + 1;
+        }
+
+        showToast(`✅ Конвертация завершена! Блоков: ${convertedVoxels.length}`);
     }
 
     function renderVoxelPreview(voxels) {
-        if (voxMesh) scene.remove(voxMesh);
+        if (voxMesh) { scene.remove(voxMesh); voxMesh = null; }
 
-        const geom = new THREE.BufferGeometry();
-        const positions = [];
+        if (!voxels.length) return;
 
-        voxels.forEach(v => {
-            const px = v.x * 0.08, py = v.y * 0.08, pz = v.z * 0.08;
-            const s = 0.035;
-            positions.push(
-                px-s, py-s, pz-s,  px+s, py-s, pz-s,
-                px+s, py+s, pz-s,  px-s, py+s, pz-s,
-                px-s, py-s, pz+s,  px+s, py-s, pz+s
-            );
+        // Создаём кубы для каждого вокселя (упрощённо — используем InstancedMesh)
+        const geometry = new THREE.BoxGeometry(0.07, 0.07, 0.07);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x00ff41,
+            emissive: 0x00ff41,
+            emissiveIntensity: 0.1,
+            transparent: true,
+            opacity: 0.8,
         });
 
-        geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-        const mat = new THREE.MeshBasicMaterial({ color: 0x00ff41, wireframe: true });
-        voxMesh = new THREE.Mesh(geom, mat);
+        const dummy = new THREE.Object3D();
+        const count = Math.min(voxels.length, 50000); // Ограничение для производительности
+        const mesh = new THREE.InstancedMesh(geometry, material, count);
+
+        for (let i = 0; i < count; i++) {
+            const v = voxels[i];
+            dummy.position.set(v.x * 0.08, v.y * 0.08, v.z * 0.08);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(i, dummy.matrix);
+        }
+
+        mesh.instanceMatrix.needsUpdate = true;
+        voxMesh = mesh;
         scene.add(voxMesh);
     }
 
@@ -594,71 +741,138 @@
         if (mode === 'short') {
             lines.push('/1');
             let cx = 0, cy = 0, cz = 0;
-            convertedVoxels.forEach(v => {
+            // Сортируем для оптимального пути
+            const sorted = [...convertedVoxels].sort((a, b) => {
+                if (a.y !== b.y) return a.y - b.y;
+                if (a.z !== b.z) return a.z - b.z;
+                return a.x - b.x;
+            });
+
+            for (const v of sorted) {
                 if (v.x !== cx) { lines.push(`/shift x ${v.x - cx}`); cx = v.x; }
                 if (v.y !== cy) { lines.push(`/shift y ${v.y - cy}`); cy = v.y; }
                 if (v.z !== cz) { lines.push(`/shift z ${v.z - cz}`); cz = v.z; }
                 lines.push(`/s ${v.blockId}`);
-            });
+            }
         } else {
-            convertedVoxels.forEach(v => {
+            for (const v of convertedVoxels) {
                 lines.push(`//pos1 ${v.x},${v.y},${v.z}`);
                 lines.push(`//pos2 ${v.x},${v.y},${v.z}`);
                 lines.push(`//set ${v.blockId}`);
-            });
+            }
         }
 
-        document.getElementById('cmdOutput').textContent = lines.join('\n');
+        // Разбиваем на части по 30 000 строк
+        const PART_SIZE = 30000;
+        allCommandParts = [];
+        for (let i = 0; i < lines.length; i += PART_SIZE) {
+            allCommandParts.push(lines.slice(i, i + PART_SIZE));
+        }
+
+        currentPartIndex = 0;
+        renderPartSelector();
+        showPart(0);
     }
 
+    function renderPartSelector() {
+        const container = document.getElementById('partSelector');
+        container.innerHTML = '';
+        
+        if (allCommandParts.length <= 1) {
+            container.innerHTML = '<span style="color: var(--text-dim); font-size: 8px;">1 часть (все команды)</span>';
+            return;
+        }
+
+        allCommandParts.forEach((part, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'part-btn' + (i === currentPartIndex ? ' active' : '');
+            btn.textContent = `${i+1} часть (${part.length})`;
+            btn.onclick = () => { currentPartIndex = i; showPart(i); };
+            container.appendChild(btn);
+        });
+    }
+
+    function showPart(index) {
+        if (!allCommandParts.length) return;
+        const part = allCommandParts[index] || [];
+        document.getElementById('cmdOutput').textContent = part.join('\n');
+        
+        // Обновляем активную кнопку
+        document.querySelectorAll('.part-btn').forEach((btn, i) => {
+            btn.classList.toggle('active', i === index);
+        });
+    }
+
+    // ================================================================
+    // 5. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ================================================================
     function showToast(text, isErr) {
         const t = document.getElementById('toast');
         t.textContent = text;
         t.classList.toggle('err', !!isErr);
         t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2000);
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    // Слушатели событий
-    document.getElementById('resolution').addEventListener('input', e => document.getElementById('resVal').textContent = e.target.value);
-    document.getElementById('scale').addEventListener('input', e => document.getElementById('scaleVal').textContent = e.target.value + 'x');
+    // ================================================================
+    // 6. СОБЫТИЯ
+    // ================================================================
+    document.getElementById('resolution').addEventListener('input', e => 
+        document.getElementById('resVal').textContent = e.target.value
+    );
+    document.getElementById('scale').addEventListener('input', e => 
+        document.getElementById('scaleVal').textContent = e.target.value + 'x'
+    );
 
-    document.getElementById('lightSlider').addEventListener('input', e => {
-        const val = e.target.value;
-        document.getElementById('lightVal').textContent = val + '%';
-        const amb = scene.getObjectByName('ambLight');
-        if (amb) amb.intensity = (val / 100) * 0.8;
+    document.getElementById('modelFile').addEventListener('change', e => {
+        loadFile(e.target.files[0]);
+        e.target.value = '';
     });
 
-    document.getElementById('speedSlider').addEventListener('input', e => {
-        const val = e.target.value;
-        document.getElementById('speedVal').textContent = val == 0 ? 'Выкл' : val;
-    });
-
-    document.getElementById('modelFile').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
     document.getElementById('processBtn').addEventListener('click', processVoxelization);
 
-    document.getElementById('toggleOrigBtn').addEventListener('click', () => { if (loadedMesh) loadedMesh.visible = !loadedMesh.visible; });
-    document.getElementById('toggleVoxBtn').addEventListener('click', () => { if (voxMesh) voxMesh.visible = !voxMesh.visible; });
-    document.getElementById('resetCamBtn').addEventListener('click', () => { camera.position.set(3, 3, 5); controls.target.set(0, 0, 0); });
+    document.getElementById('toggleOrigBtn').addEventListener('click', () => {
+        if (loadedMesh) loadedMesh.visible = !loadedMesh.visible;
+    });
+
+    document.getElementById('toggleVoxBtn').addEventListener('click', () => {
+        if (voxMesh) voxMesh.visible = !voxMesh.visible;
+    });
+
+    document.getElementById('resetCamBtn').addEventListener('click', () => {
+        camera.position.set(4, 4, 6);
+        controls.target.set(0, 0, 0);
+        controls.update();
+    });
 
     document.getElementById('copyBtn').addEventListener('click', () => {
         const txt = document.getElementById('cmdOutput').textContent;
-        navigator.clipboard.writeText(txt).then(() => showToast('Скопировано в буфер'));
+        if (!txt || txt === 'Загрузите модель и нажмите Обработать') {
+            showToast('Нет команд для копирования', true);
+            return;
+        }
+        navigator.clipboard.writeText(txt).then(() => showToast('📋 Скопировано!'));
     });
 
     document.getElementById('downloadBtn').addEventListener('click', () => {
         const txt = document.getElementById('cmdOutput').textContent;
+        if (!txt || txt === 'Загрузите модель и нажмите Обработать') {
+            showToast('Нет команд для скачивания', true);
+            return;
+        }
         const blob = new Blob([txt], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'multicraft_build.txt';
         a.click();
+        showToast('💾 Скачано!');
     });
 
-    window.addEventListener('DOMContentLoaded', () => {
-        init3D();
-    });
+    // ================================================================
+    // 7. ЗАПУСК
+    // ================================================================
+    window.addEventListener('DOMContentLoaded', init3D);
     </script>
 </body>
 </html>
