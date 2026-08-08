@@ -3,583 +3,358 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[SYSTEM] 3D to Luanti Voxelizer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>MultiCraft 3D Converter</title>
     <style>
+        @font-face {
+            font-family: 'MultiCraftFont';
+            src: url('fonts/MultiCraftFont.ttf') format('truetype');
+            font-display: swap;
+        }
+
         :root {
-            --bg: #0a0e0a;
-            --card: #0d140d;
-            --card2: #121c12;
-            --border: #00ff41;
-            --border-dim: rgba(0, 255, 65, 0.25);
-            --text: #00ff41;
-            --muted: #00a82b;
-            --accent: #8a5cf6;
-            --red: #ef4444;
-            --font-head: 'Press Start 2P', monospace;
+            --bg: #080808;
+            --panel: #111111;
+            --border: #222222;
+            --accent: #00ff41;
+            --text-main: #dddddd;
+            --text-muted: #666666;
+            --font-custom: 'MultiCraftFont', 'Courier New', monospace;
             --font-main: 'Courier New', monospace;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
-            margin: 0;
-            font-family: var(--font-main);
             background-color: var(--bg);
-            background-image: 
-                linear-gradient(rgba(0, 255, 65, 0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 65, 0.04) 1px, transparent 1px);
-            background-size: 24px 24px;
-            color: var(--text);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            font-size: 13px;
+            line-height: 1.4;
             min-height: 100vh;
-            text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
         }
 
         header {
-            padding: 24px 20px 16px;
-            text-align: center;
-            border-bottom: 1px solid var(--border-dim);
-            background: rgba(10, 14, 10, 0.95);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        header h1 {
-            margin: 0 0 10px;
-            font-family: var(--font-head);
-            font-size: 1.1rem;
-            color: var(--text);
+        h1 {
+            font-family: var(--font-custom);
+            font-size: 14px;
+            color: var(--accent);
+            font-weight: normal;
             letter-spacing: 1px;
         }
 
-        header h1 span {
-            color: var(--accent);
-            text-shadow: 0 0 8px var(--accent);
+        .version {
+            color: var(--text-muted);
+            font-size: 11px;
         }
 
-        header p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 0.85rem;
-        }
-
-        .tabbar {
-            position: sticky;
-            top: 0;
-            z-index: 50;
+        .nav {
             display: flex;
-            background: #060906;
-            border-bottom: 1px solid var(--border-dim);
+            border-bottom: 1px solid var(--border);
+            background: var(--panel);
         }
 
-        .tabbar button {
+        .nav-btn {
             flex: 1;
             background: transparent;
             border: none;
-            border-bottom: 3px solid transparent;
-            color: var(--muted);
-            padding: 14px 6px;
-            font-family: var(--font-head);
-            font-size: 0.6rem;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            padding: 12px;
+            font-family: var(--font-main);
+            font-size: 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            text-align: center;
         }
 
-        .tabbar button.active {
-            color: var(--text);
+        .nav-btn.active {
+            color: var(--accent);
             border-bottom-color: var(--accent);
-            background: rgba(0, 255, 65, 0.05);
-            text-shadow: 0 0 6px var(--text);
+            background: rgba(0, 255, 65, 0.02);
         }
 
-        .tabbar button:disabled {
+        .nav-btn:disabled {
             opacity: 0.3;
             cursor: not-allowed;
         }
 
         main {
-            max-width: 1200px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: 20px 16px 60px;
+            padding: 20px 16px;
         }
 
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; animation: fadeIn 0.3s ease-out; }
-
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(6px); } 
-            to { opacity: 1; transform: translateY(0); } 
+        .tab-panel {
+            display: none;
         }
 
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border-dim);
-            border-radius: 4px;
-            padding: 20px;
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.05);
-            transition: border-color 0.25s ease;
-        }
-
-        .card:hover {
-            border-color: var(--border);
-        }
-
-        /* Сканирующая строка в карточках */
-        .card::after {
-            content: "";
-            position: absolute;
-            top: -100%;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, transparent, rgba(0, 255, 65, 0.05), transparent);
-            animation: scanline 8s linear infinite;
-            pointer-events: none;
-        }
-
-        @keyframes scanline {
-            0% { top: -100%; }
-            100% { top: 100%; }
-        }
-
-        .card h2 {
-            margin: 0 0 16px;
-            font-family: var(--font-head);
-            font-size: 0.75rem;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card h2 .dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent);
-            display: inline-block;
-            box-shadow: 0 0 8px var(--accent);
-            animation: pulse-dot 1.5s infinite ease-in-out;
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 0.3; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-
-        label.field-label {
+        .tab-panel.active {
             display: block;
-            font-size: 0.85rem;
-            color: var(--muted);
-            margin-bottom: 8px;
-            font-weight: bold;
         }
 
-        input[type="range"], select, input[type="file"] {
-            width: 100%;
-            accent-color: var(--accent);
-            font-family: var(--font-main);
-        }
-
-        select, input[type="file"] {
-            padding: 10px;
-            background: var(--card2);
-            border: 1px solid var(--border-dim);
-            border-radius: 4px;
-            color: var(--text);
-            font-size: 0.85rem;
-            outline: none;
-        }
-
-        select:focus, input[type="file"]:focus {
-            border-color: var(--border);
-            box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
-        }
-
-        .row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 14px;
-        }
-
-        button {
-            font-family: var(--font-main);
-            cursor: pointer;
+        .box {
+            background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 12px 16px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: var(--text);
-            background: #081208;
-            transition: all 0.2s ease;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .box-title {
+            font-family: var(--font-custom);
+            font-size: 12px;
+            color: var(--text-main);
+            margin-bottom: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        button:hover:not(:disabled) {
-            background: var(--border);
+        label {
+            display: block;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+
+        input[type="file"], select, input[type="range"] {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px;
+            font-family: var(--font-main);
+            font-size: 12px;
+            outline: none;
+            margin-bottom: 12px;
+        }
+
+        input[type="range"] {
+            padding: 0;
+            height: 20px;
+            accent-color: var(--accent);
+        }
+
+        .val {
+            color: var(--accent);
+            float: right;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        button.btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 14px;
+            font-family: var(--font-main);
+            font-size: 11px;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            transition: all 0.15s ease;
+        }
+
+        button.btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        button.btn-main {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        button.btn-main:hover:not(:disabled) {
+            background: var(--accent);
             color: #000;
-            box-shadow: 0 0 12px rgba(0, 255, 65, 0.6);
-        }
-
-        button:active:not(:disabled) {
-            transform: scale(0.98);
         }
 
         button:disabled {
-            opacity: 0.3;
-            border-color: var(--border-dim);
+            opacity: 0.25;
             cursor: not-allowed;
-        }
-
-        .btn-purple {
-            border-color: var(--accent);
-            color: #fff;
-            background: #180d2b;
-            animation: pulse-purple 2.5s infinite ease-in-out;
-        }
-
-        .btn-purple:hover:not(:disabled) {
-            background: var(--accent);
-            color: #fff;
-            box-shadow: 0 0 16px rgba(138, 92, 246, 0.8);
-        }
-
-        @keyframes pulse-purple {
-            0%, 100% { box-shadow: 0 0 4px rgba(138, 92, 246, 0.3); }
-            50% { box-shadow: 0 0 14px rgba(138, 92, 246, 0.7); }
-        }
-
-        .btn-green {
-            background: #002b0b;
-            border-color: var(--border);
-        }
-
-        .btn-blue {
-            background: #0b182b;
-            border-color: #2f7ff2;
-            color: #61a5ff;
-        }
-
-        .btn-blue:hover:not(:disabled) {
-            background: #2f7ff2;
-            color: #000;
-            box-shadow: 0 0 12px rgba(47, 127, 242, 0.6);
-        }
-
-        .btn-full { width: 100%; }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border-dim);
-            color: var(--text);
-        }
-
-        .value-display {
-            display: inline-block;
-            background: var(--card2);
-            padding: 2px 8px;
-            border: 1px solid var(--border-dim);
-            border-radius: 4px;
-            color: var(--accent);
-            font-weight: bold;
-            margin-left: 8px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: var(--card2);
-            border: 1px solid var(--border-dim);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 14px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--border), var(--accent));
-            width: 0%;
-            transition: width 0.2s ease;
         }
 
         #canvas3d {
             width: 100%;
-            height: 500px;
-            border: 1px solid var(--border-dim);
-            border-radius: 4px;
-            background: #050805;
+            height: 400px;
+            background: var(--bg);
+            border: 1px solid var(--border);
         }
 
-        .preview-controls {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
             margin-top: 12px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
         }
 
-        .parts-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-        }
-
-        .part-card {
-            background: var(--card2);
-            border: 1px solid var(--border-dim);
-            border-radius: 4px;
-            padding: 14px;
+        .stat-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 8px;
             text-align: center;
         }
 
-        .part-card h3 {
-            margin: 0 0 10px;
-            font-family: var(--font-head);
-            font-size: 0.65rem;
+        .stat-num {
+            font-size: 14px;
             color: var(--accent);
+            margin-top: 4px;
         }
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 10px;
-            margin-top: 14px;
-        }
-
-        .stat-item {
-            background: var(--card2);
-            padding: 12px;
-            border-radius: 4px;
-            text-align: center;
-            border: 1px solid var(--border-dim);
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--muted);
-            margin-bottom: 6px;
-        }
-
-        .stat-value {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--accent);
+        .commands-list {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: pre-wrap;
+            word-break: break-all;
         }
 
         .toast {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #081208;
-            color: var(--text);
-            padding: 14px 18px;
-            border-radius: 4px;
-            border: 1px solid var(--border);
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+            bottom: 16px;
+            right: 16px;
+            background: var(--panel);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 14px;
+            font-size: 11px;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
             pointer-events: none;
-            z-index: 1000;
-            max-width: 320px;
-            font-size: 0.85rem;
+            transition: opacity 0.2s ease;
         }
 
         .toast.show {
             opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
         }
 
-        .toast.error {
-            border-color: var(--red);
-            color: #ff8888;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        .toast.err {
+            border-color: #ff4444;
+            color: #ff4444;
         }
 
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .progress {
+            height: 2px;
+            background: var(--border);
+            width: 100%;
             margin-top: 12px;
-            padding: 10px;
-            background: var(--card2);
-            border: 1px solid var(--border-dim);
-            border-radius: 4px;
+            overflow: hidden;
         }
 
-        input[type="checkbox"] {
-            accent-color: var(--accent);
-            cursor: pointer;
-            width: 18px;
-            height: 18px;
-        }
-
-        .checkbox-label {
-            margin: 0;
-            cursor: pointer;
-            font-size: 0.85rem;
-            color: var(--text);
-        }
-
-        .info-box {
-            background: rgba(138, 92, 246, 0.08);
-            border: 1px solid var(--accent);
-            border-radius: 4px;
-            padding: 12px;
-            margin-top: 12px;
-            font-size: 0.8rem;
-            color: #d1c4e9;
-            line-height: 1.5;
-        }
-
-        .info-box code {
-            background: #000;
-            border: 1px solid var(--border-dim);
-            padding: 2px 6px;
-            border-radius: 3px;
-            color: var(--border);
-            font-size: 0.75rem;
-        }
-
-        @media (max-width: 768px) {
-            .tabbar button { font-size: 0.5rem; }
-            header h1 { font-size: 0.85rem; }
-            main { padding: 12px 10px 40px; }
-            .card { padding: 14px; }
-            #canvas3d { height: 320px; }
+        .progress-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.1s ease;
         }
     </style>
 </head>
 <body>
+
     <header>
-        <h1>3D-модель в блоки <span>Luanti</span></h1>
-        <p>Генератор команд WorldEdit для серверов Minetest / MultiCraft</p>
+        <h1>MULTICRAFT VOXELIZER</h1>
+        <span class="version">v2.0</span>
     </header>
 
-    <div class="tabbar">
-        <button id="tab1Btn" class="active">> 01_ЗАГРУЗКА</button>
-        <button id="tab2Btn" disabled>> 02_ПРЕВЬЮ</button>
-        <button id="tab3Btn" disabled>> 03_КОМАНДЫ</button>
+    <div class="nav">
+        <button id="tab1Btn" class="nav-btn active">1. ЗАГРУЗКА</button>
+        <button id="tab2Btn" class="nav-btn" disabled>2. ПРОСМОТР</button>
+        <button id="tab3Btn" class="nav-btn" disabled>3. КОМАНДЫ</button>
     </div>
 
     <main>
-        <!-- TAB 1: Load 3D Model -->
         <div id="tab1" class="tab-panel active">
-            <div class="card">
-                <h2><span class="dot"></span>Загрузка файла 3D-модели</h2>
-                <label class="field-label">Выберите 3D-модель (.OBJ, .GLB, .GLTF, .STL)</label>
+            <div class="box">
+                <div class="box-title">Файл модели</div>
+                <label>Форматы: OBJ, GLB, GLTF, STL</label>
                 <input type="file" id="modelFile" accept=".obj,.glb,.gltf,.stl" />
-                <div class="info-box">
-                    <strong>✓ Форматы:</strong> OBJ, GLB, GLTF, STL<br/>
-                    <strong>✓ Лимит:</strong> до 50MB рекомендуется<br/>
-                    <strong>🧪 Тест:</strong> выполните в консоли браузера: <code>window.createTestCube()</code>
-                </div>
             </div>
 
-            <div class="card">
-                <h2><span class="dot"></span>Параметры вокселизации</h2>
+            <div class="box">
+                <div class="box-title">Настройки конвертации</div>
                 
-                <label class="field-label">
-                    Разрешение блоков
-                    <span class="value-display" id="resolutionDisplay">0.5</span>
-                </label>
-                <input type="range" id="resolution" min="0.05" max="1.0" step="0.05" value="0.5" />
+                <label>Детализация <span class="val" id="resVal">0.5</span></label>
+                <input type="range" id="resolution" min="0.1" max="1.0" step="0.05" value="0.5" />
 
-                <label class="field-label" style="margin-top: 16px;">
-                    Коэффициент масштаба
-                    <span class="value-display" id="scaleDisplay">1</span>
-                </label>
+                <label>Размер <span class="val" id="scaleVal">1</span></label>
                 <input type="range" id="scale" min="1" max="5" step="1" value="1" />
 
-                <label class="field-label" style="margin-top: 16px;">Режим типов блоков</label>
-                <select id="blockMode">
-                    <option value="cubes">🟦 Только стандартные блоки</option>
-                    <option value="detailed">🏗️ С деталями (ступеньки, плиты, колонны)</option>
+                <label>Режим команд</label>
+                <select id="cmdMode">
+                    <option value="short">Быстрые команды (/shift, /s)</option>
+                    <option value="standard">Стандартные (//pos, //set)</option>
                 </select>
-
-                <div class="checkbox-group">
-                    <input type="checkbox" id="limitBlocks" checked />
-                    <label class="checkbox-label" for="limitBlocks">Ограничить максимум 100 000 блоков</label>
-                </div>
             </div>
 
-            <div class="card">
-                <h2><span class="dot"></span>Запуск</h2>
-                <button class="btn-purple btn-full" id="voxelizeBtn">🚀 Запустить вокселизацию</button>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div style="text-align: center; font-size: 0.8rem; color: var(--muted); margin-top: 8px;" id="progressText"></div>
+            <div class="box">
+                <button class="btn btn-main" id="startBtn">Обработать модель</button>
+                <div class="progress"><div class="progress-bar" id="pBar"></div></div>
             </div>
         </div>
 
-        <!-- TAB 2: Preview & Voxelize -->
         <div id="tab2" class="tab-panel">
-            <div class="card">
-                <h2><span class="dot"></span>3D-просмотр</h2>
+            <div class="box">
+                <div class="box-title">Окно просмотра</div>
                 <div id="canvas3d"></div>
-                <div class="preview-controls">
-                    <button class="btn-outline" id="toggleOriginalBtn">👓 Оригинал</button>
-                    <button class="btn-outline" id="toggleVoxelBtn">🎮 Воксели</button>
-                    <button class="btn-outline" id="resetCameraBtn">🔄 Сброс камеры</button>
+                <div class="btn-group">
+                    <button class="btn" id="btnShowOrig">Исходник</button>
+                    <button class="btn" id="btnShowVox">Блоки</button>
+                    <button class="btn" id="btnResetCam">Сброс камеры</button>
                 </div>
             </div>
 
-            <div class="card">
-                <h2><span class="dot"></span>Статистика</h2>
-                <div class="stats">
-                    <div class="stat-item">
-                        <div class="stat-label">Всего блоков</div>
-                        <div class="stat-value" id="statTotal">0</div>
+            <div class="box">
+                <div class="box-title">Информация</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <label>Всего блоков</label>
+                        <div class="stat-num" id="countBlocks">0</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Кубы</div>
-                        <div class="stat-value" id="statCubes">0</div>
+                    <div class="stat-card">
+                        <label>Ширина</label>
+                        <div class="stat-num" id="sizeX">0</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Ступеньки</div>
-                        <div class="stat-value" id="statStairs">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Плиты</div>
-                        <div class="stat-value" id="statSlabs">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Колонны</div>
-                        <div class="stat-value" id="statColumns">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Время</div>
-                        <div class="stat-value" id="statTime">0с</div>
+                    <div class="stat-card">
+                        <label>Высота</label>
+                        <div class="stat-num" id="sizeY">0</div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2><span class="dot"></span>Экспорт</h2>
-                <button class="btn-green btn-full" id="generateBtn">📝 Сгенерировать команды</button>
+            <div class="box">
+                <button class="btn btn-main" id="toTab3Btn">Перейти к командам</button>
             </div>
         </div>
 
-        <!-- TAB 3: Generate Commands -->
         <div id="tab3" class="tab-panel">
-            <div class="card">
-                <h2><span class="dot"></span> WorldEdit Команды</h2>
-                <div class="row">
-                    <button class="btn-blue" id="copyAllBtn">📋 Скопировать всё</button>
-                    <button class="btn-blue" id="downloadBtn">⬇️ Скачать .TXT</button>
+            <div class="box">
+                <div class="box-title">Готовые команды</div>
+                <div class="commands-list" id="cmdList">Команды еще не созданы</div>
+                <div class="btn-group">
+                    <button class="btn btn-main" id="copyBtn">Копировать текст</button>
+                    <button class="btn" id="downloadBtn">Скачать файл .txt</button>
                 </div>
-                <div id="commandsContainer" class="parts-grid" style="margin-top: 16px;"></div>
             </div>
         </div>
     </main>
 
     <div id="toast" class="toast"></div>
 
-    <!-- THREE.JS CORE & LOADERS (Фиксированные стабильные CDN 0.128.0) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
@@ -587,388 +362,276 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
 
     <script>
-    // ==================================================================
-    // BLOCK TABLE - Luanti / Minetest Palette
-    // ==================================================================
-    const BLOCK_TABLE = {
+    const BLOCK_PALETTE = {
         'default:stone': [128, 128, 128],
-        'default:cobble': [128, 120, 110],
-        'default:brick': [168, 80, 60],
-        'default:sand': [220, 200, 150],
-        'default:gravel': [140, 140, 140],
-        'default:dirt': [110, 100, 80],
-        'default:wood': [120, 80, 40],
-        'default:glass': [180, 200, 220],
-        'concrete:concrete_white': [240, 240, 240],
-        'concrete:concrete_black': [30, 30, 30],
-        'concrete:concrete_red': [200, 50, 50],
-        'concrete:concrete_green': [80, 160, 80],
-        'concrete:concrete_blue': [80, 100, 200],
+        'default:cobble': [100, 100, 100],
+        'default:brick': [160, 70, 50],
+        'default:sand': [220, 200, 140],
+        'default:dirt': [100, 70, 40],
+        'default:wood': [110, 80, 40],
+        'default:glass': [200, 220, 230],
         'wool:white': [240, 240, 240],
-        'wool:black': [40, 40, 40],
-        'wool:red': [200, 50, 50],
-        'wool:green': [100, 160, 80],
-        'wool:blue': [80, 100, 200]
+        'wool:black': [20, 20, 20],
+        'wool:red': [200, 40, 40],
+        'wool:green': [40, 160, 40],
+        'wool:blue': [40, 60, 200],
+        'wool:yellow': [230, 200, 40],
+        'wool:orange': [230, 120, 30]
     };
 
-    function nearestBlock(r, g, b) {
-        let bestBlock = 'default:stone';
-        let minDistance = Infinity;
+    function findClosestBlock(r, g, b) {
+        let selected = 'default:stone';
+        let minDiff = Infinity;
 
-        for (const [blockId, rgb] of Object.entries(BLOCK_TABLE)) {
-            const dist = Math.sqrt(
+        for (const [id, rgb] of Object.entries(BLOCK_PALETTE)) {
+            const diff = Math.sqrt(
                 Math.pow(r - rgb[0], 2) +
                 Math.pow(g - rgb[1], 2) +
                 Math.pow(b - rgb[2], 2)
             );
-            if (dist < minDistance) {
-                minDistance = dist;
-                bestBlock = blockId;
+            if (diff < minDiff) {
+                minDiff = diff;
+                selected = id;
             }
         }
-        return bestBlock;
+        return selected;
     }
 
-    // ==================================================================
-    // VOXELIZATION CLASS
-    // ==================================================================
-    class VoxelConverter {
-        constructor(resolution, scale, blockMode) {
-            this.resolution = resolution;
-            this.scale = scale;
-            this.blockMode = blockMode;
-            this.blockStats = { cubes: 0, stairs: 0, slabs: 0, columns: 0 };
-        }
-
-        voxelizeMesh(geometry) {
-            if (!geometry || !geometry.attributes || !geometry.attributes.position) return [];
-            
-            const positions = geometry.attributes.position.array;
-            const voxelSet = new Set();
-
-            for (let i = 0; i < positions.length; i += 3) {
-                const x = positions[i];
-                const y = positions[i + 1];
-                const z = positions[i + 2];
-
-                if (!isFinite(x) || !isFinite(y) || !isFinite(z)) continue;
-
-                const vx = Math.round(x / this.resolution);
-                const vy = Math.round(y / this.resolution);
-                const vz = Math.round(z / this.resolution);
-
-                voxelSet.add(`${vx},${vy},${vz}`);
-            }
-
-            return Array.from(voxelSet).map(key => key.split(',').map(Number));
-        }
-
-        determineBlockType(voxelSet, x, y, z, baseBlock) {
-            this.blockStats.cubes++;
-            return baseBlock;
-        }
-    }
-
-    // ==================================================================
-    // THREE.JS SETUP & ENGINE
-    // ==================================================================
     let scene, camera, renderer, controls;
-    let originalMesh, voxelMesh, currentModel = null;
+    let mainMesh = null, voxelMesh = null;
+    let convertedData = null;
 
-    function initThreeJS() {
-        const container = document.getElementById('canvas3d');
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-
+    function initEngine() {
+        const target = document.getElementById('canvas3d');
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x050805);
+        scene.background = new THREE.Color(0x080808);
 
-        camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
-        camera.position.set(0, 0, 5);
+        camera = new THREE.PerspectiveCamera(60, target.clientWidth / target.clientHeight, 0.1, 1000);
+        camera.position.set(0, 2, 5);
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(width, height);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        container.appendChild(renderer.domElement);
+        renderer.setSize(target.clientWidth, target.clientHeight);
+        target.appendChild(renderer.domElement);
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-        scene.add(ambientLight);
+        const light1 = new THREE.AmbientLight(0xffffff, 0.7);
+        const light2 = new THREE.DirectionalLight(0xffffff, 0.5);
+        light2.position.set(5, 10, 5);
+        scene.add(light1, light2);
 
-        const dirLight = new THREE.DirectionalLight(0x00ff41, 0.6);
-        dirLight.position.set(5, 10, 7);
-        scene.add(dirLight);
-
-        function animate() {
-            requestAnimationFrame(animate);
+        function renderLoop() {
+            requestAnimationFrame(renderLoop);
             controls.update();
             renderer.render(scene, camera);
         }
-        animate();
-
-        window.addEventListener('resize', () => {
-            const w = container.clientWidth;
-            const h = container.clientHeight;
-            if (w && h) {
-                camera.aspect = w / h;
-                camera.updateProjectionMatrix();
-                renderer.setSize(w, h);
-            }
-        });
+        renderLoop();
     }
 
-    // Универсальная рабочая функция загрузки моделей через Blob URL
-    function loadModel(file) {
+    function openFile(file) {
         if (!file) return;
+        msg('Чтение файла...');
 
-        const filename = file.name;
-        const ext = filename.split('.').pop().toLowerCase();
-        
-        console.log(`📂 Чтение файла: ${filename} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
-        showToast(`⏳ Загрузка ${filename}...`);
+        const url = URL.createObjectURL(file);
+        const ext = file.name.split('.').pop().toLowerCase();
 
-        const objectUrl = URL.createObjectURL(file);
-        const cleanup = () => URL.revokeObjectURL(objectUrl);
-
-        const onError = (error) => {
-            cleanup();
-            console.error(`❌ Ошибка загрузки .${ext}:`, error);
-            let errorText = error?.message || (typeof error === 'string' ? error : 'Ошибка парсинга файла');
-            showToast(`❌ Не удалось открыть .${ext}: ${errorText}`, true);
+        const done = (obj) => {
+            URL.revokeObjectURL(url);
+            displayModel(obj);
+            msg('Файл загружен');
+            document.getElementById('tab2Btn').disabled = false;
         };
 
-        const onSuccess = (object) => {
-            cleanup();
-            setupModel(object);
+        const fail = (err) => {
+            URL.revokeObjectURL(url);
+            msg('Ошибка чтения файла', true);
+            console.error(err);
         };
 
-        try {
-            if (ext === 'obj') {
-                if (typeof THREE.OBJLoader === 'undefined') throw new Error('OBJLoader не загружен');
-                new THREE.OBJLoader().load(objectUrl, onSuccess, undefined, onError);
-            } else if (ext === 'glb' || ext === 'gltf') {
-                if (typeof THREE.GLTFLoader === 'undefined') throw new Error('GLTFLoader не загружен');
-                new THREE.GLTFLoader().load(objectUrl, (gltf) => onSuccess(gltf.scene), undefined, onError);
-            } else if (ext === 'stl') {
-                if (typeof THREE.STLLoader === 'undefined') throw new Error('STLLoader не загружен');
-                new THREE.STLLoader().load(objectUrl, (geometry) => {
-                    geometry.center();
-                    const material = new THREE.MeshPhongMaterial({ color: 0x00ff41, wireframe: true });
-                    onSuccess(new THREE.Mesh(geometry, material));
-                }, undefined, onError);
-            } else {
-                cleanup();
-                showToast(`❌ Формат .${ext} не поддерживается`, true);
-            }
-        } catch (err) {
-            onError(err);
-        }
+        if (ext === 'obj') new THREE.OBJLoader().load(url, done, null, fail);
+        else if (ext === 'glb' || ext === 'gltf') new THREE.GLTFLoader().load(url, g => done(g.scene), null, fail);
+        else if (ext === 'stl') new THREE.STLLoader().load(url, geom => {
+            geom.center();
+            done(new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: 0x888888 })));
+        }, null, fail);
+        else msg('Формат не поддерживается', true);
     }
 
-    function setupModel(model) {
-        if (originalMesh) scene.remove(originalMesh);
+    function displayModel(object) {
+        if (mainMesh) scene.remove(mainMesh);
         if (voxelMesh) scene.remove(voxelMesh);
 
-        model.traverse((child) => {
-            if (child.isMesh && !child.material) {
-                child.material = new THREE.MeshPhongMaterial({ color: 0x00ff41, wireframe: true });
-            }
-        });
-
-        const box = new THREE.Box3().setFromObject(model);
+        const box = new THREE.Box3().setFromObject(object);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        model.position.sub(center);
+        object.position.sub(center);
         const maxDim = Math.max(size.x, size.y, size.z);
-        if (maxDim > 0) model.scale.multiplyScalar(4 / maxDim);
+        if (maxDim > 0) object.scale.multiplyScalar(3 / maxDim);
 
-        originalMesh = model;
-        scene.add(originalMesh);
-        currentModel = model;
+        mainMesh = object;
+        scene.add(mainMesh);
 
         camera.position.set(0, 0, 5);
         controls.target.set(0, 0, 0);
         controls.update();
-
-        showToast('✓ Модель успешно загружена!');
-        document.getElementById('tab2Btn').disabled = false;
     }
 
-    async function performVoxelization() {
-        if (!currentModel) {
-            showToast('❌ Загрузите 3D-модель!', true);
+    function processModel() {
+        if (!mainMesh) {
+            msg('Сначала загрузите модель', true);
             return;
         }
 
-        const resolution = parseFloat(document.getElementById('resolution').value);
-        const scale = parseInt(document.getElementById('scale').value);
-        const blockMode = document.getElementById('blockMode').value;
-        const limitBlocks = document.getElementById('limitBlocks').checked;
+        setProgress(20);
+        const step = parseFloat(document.getElementById('resolution').value);
+        const scaleVal = parseInt(document.getElementById('scale').value);
 
-        updateProgress(10, 'Извлечение геометрии...');
+        const blocksMap = new Map();
 
-        const geometries = [];
-        currentModel.traverse((obj) => {
-            if (obj.geometry) geometries.push(obj.geometry);
+        mainMesh.traverse((child) => {
+            if (child.isMesh && child.geometry) {
+                let color = [128, 128, 128];
+                if (child.material && child.material.color) {
+                    color = [
+                        Math.round(child.material.color.r * 255),
+                        Math.round(child.material.color.g * 255),
+                        Math.round(child.material.color.b * 255)
+                    ];
+                }
+
+                const pos = child.geometry.attributes.position.array;
+                for (let i = 0; i < pos.length; i += 3) {
+                    const vx = Math.round((pos[i] * scaleVal) / step);
+                    const vy = Math.round((pos[i+1] * scaleVal) / step);
+                    const vz = Math.round((pos[i+2] * scaleVal) / step);
+
+                    const key = `${vx},${vy},${vz}`;
+                    if (!blocksMap.has(key)) {
+                        blocksMap.set(key, findClosestBlock(color[0], color[1], color[2]));
+                    }
+                }
+            }
         });
 
-        const converter = new VoxelConverter(resolution, scale, blockMode);
-        let allVoxels = [];
+        setProgress(70);
 
-        for (let i = 0; i < geometries.length; i++) {
-            allVoxels = allVoxels.concat(converter.voxelizeMesh(geometries[i]));
-            updateProgress(10 + Math.round((i / geometries.length) * 30), 'Вокселизация...');
-            await new Promise(r => setTimeout(r, 10));
-        }
+        const blocksArray = [];
+        blocksMap.forEach((blockId, key) => {
+            const [x, y, z] = key.split(',').map(Number);
+            blocksArray.push({ x, y, z, blockId });
+        });
 
-        const voxelSet = new Set(allVoxels.map(v => v.join(',')));
-        const uniqueVoxels = Array.from(voxelSet).map(s => s.split(',').map(Number));
+        convertedData = blocksArray;
+        renderVoxels(blocksArray);
 
-        if (limitBlocks && uniqueVoxels.length > 100000) {
-            showToast(`❌ Лимит превышен: ${uniqueVoxels.length} блоков`, true);
-            updateProgress(0);
-            return;
-        }
-
-        const blockMap = new Map();
-        for (let i = 0; i < uniqueVoxels.length; i++) {
-            const [x, y, z] = uniqueVoxels[i];
-            const blockId = nearestBlock(128, 128, 128);
-            blockMap.set(`${x},${y},${z}`, blockId);
-        }
-
-        createVoxelVisualization(uniqueVoxels);
-
-        window.voxelData = { voxels: uniqueVoxels, blockMap };
-
-        document.getElementById('statTotal').textContent = uniqueVoxels.length;
-        document.getElementById('statCubes').textContent = converter.blockStats.cubes;
-        document.getElementById('statTime').textContent = '0.5с';
-
-        updateProgress(100, '✓ Готово');
-        showToast(`✓ Вокселизация завершена: ${uniqueVoxels.length} блоков`);
+        document.getElementById('countBlocks').textContent = blocksArray.length;
         document.getElementById('tab3Btn').disabled = false;
 
-        setTimeout(() => updateProgress(0), 1200);
+        setProgress(100);
+        msg('Обработка завершена');
+        setTimeout(() => setProgress(0), 1000);
     }
 
-    function createVoxelVisualization(voxels) {
+    function renderVoxels(blocks) {
         if (voxelMesh) scene.remove(voxelMesh);
 
-        const geometry = new THREE.BufferGeometry();
+        const geom = new THREE.BufferGeometry();
         const positions = [];
 
-        for (const [x, y, z] of voxels) {
-            const px = x * 0.1, py = y * 0.1, pz = z * 0.1, s = 0.04;
+        blocks.forEach(b => {
+            const px = b.x * 0.1, py = b.y * 0.1, pz = b.z * 0.1;
+            const s = 0.04;
             positions.push(
-                px - s, py - s, pz - s, px + s, py - s, pz - s,
-                px + s, py + s, pz - s, px - s, py + s, pz - s,
-                px - s, py - s, pz + s, px + s, py - s, pz + s
+                px-s, py-s, pz-s,  px+s, py-s, pz-s,
+                px+s, py+s, pz-s,  px-s, py+s, pz-s,
+                px-s, py-s, pz+s,  px+s, py-s, pz+s
             );
-        }
+        });
 
-        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-        const material = new THREE.MeshBasicMaterial({ color: 0x8a5cf6, wireframe: true });
-        voxelMesh = new THREE.Mesh(geometry, material);
+        geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+        const mat = new THREE.MeshBasicMaterial({ color: 0x00ff41, wireframe: true });
+        voxelMesh = new THREE.Mesh(geom, mat);
         scene.add(voxelMesh);
     }
 
-    function generateCommands() {
-        if (!window.voxelData) return;
-        const { voxels, blockMap } = window.voxelData;
-        const commands = ['/1', '/2'];
+    function makeCommands() {
+        if (!convertedData || convertedData.length === 0) return;
 
-        let currentPos = [0, 0, 0];
-        for (const [x, y, z] of voxels) {
-            const block = blockMap.get(`${x},${y},${z}`) || 'default:stone';
-            ['x', 'y', 'z'].forEach((axis, i) => {
-                const diff = [x, y, z][i] - currentPos[i];
-                if (diff !== 0) {
-                    commands.push(`/shift ${axis} ${diff}`);
-                    currentPos[i] = [x, y, z][i];
-                }
+        const mode = document.getElementById('cmdMode').value;
+        let lines = [];
+
+        if (mode === 'short') {
+            lines.push('/1');
+            let cx = 0, cy = 0, cz = 0;
+            convertedData.forEach(b => {
+                if (b.x !== cx) { lines.push(`/shift x ${b.x - cx}`); cx = b.x; }
+                if (b.y !== cy) { lines.push(`/shift y ${b.y - cy}`); cy = b.y; }
+                if (b.z !== cz) { lines.push(`/shift z ${b.z - cz}`); cz = b.z; }
+                lines.push(`/s ${b.blockId}`);
             });
-            commands.push(`/s ${block}`);
+        } else {
+            convertedData.forEach(b => {
+                lines.push(`//pos1 ${b.x},${b.y},${b.z}`);
+                lines.push(`//pos2 ${b.x},${b.y},${b.z}`);
+                lines.push(`//set ${b.blockId}`);
+            });
         }
 
-        window.commandParts = [commands];
-        renderCommandParts(window.commandParts);
-        showToast(`✓ Сгенерировано ${commands.length} команд`);
+        const text = lines.join('\n');
+        document.getElementById('cmdList').textContent = text;
     }
 
-    function renderCommandParts(parts) {
-        const container = document.getElementById('commandsContainer');
-        container.innerHTML = '';
-        parts.forEach((part, i) => {
-            const card = document.createElement('div');
-            card.className = 'part-card';
-            card.innerHTML = `
-                <h3>Часть ${i + 1} (${part.length} команд)</h3>
-                <button class="btn-green" onclick="fastCopy(window.commandParts[${i}].join('\\n'), 'Скопировано!')">Копировать Ч.${i + 1}</button>
-            `;
-            container.appendChild(card);
-        });
+    function showTab(id) {
+        document.querySelectorAll('.tab-panel').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById(id + 'Btn').classList.add('active');
     }
 
-    // ==================================================================
-    // UTILS & EVENTS
-    // ==================================================================
-    function updateProgress(percent, text) {
-        document.getElementById('progressFill').style.width = percent + '%';
-        if (text) document.getElementById('progressText').textContent = text;
+    function msg(text, isErr) {
+        const t = document.getElementById('toast');
+        t.textContent = text;
+        t.classList.toggle('err', !!isErr);
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
     }
 
-    function showToast(msg, isError) {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.classList.toggle('error', !!isError);
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2200);
+    function setProgress(val) {
+        document.getElementById('pBar').style.width = val + '%';
     }
 
-    function fastCopy(text, msg) {
-        navigator.clipboard.writeText(text)
-            .then(() => showToast(msg))
-            .catch(() => showToast('Ошибка буфера обмена', true));
-    }
+    document.getElementById('resolution').addEventListener('input', e => document.getElementById('resVal').textContent = e.target.value);
+    document.getElementById('scale').addEventListener('input', e => document.getElementById('scaleVal').textContent = e.target.value);
 
-    function goToTab(tabId) {
-        document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tabbar button').forEach(el => el.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        document.getElementById(tabId + 'Btn').classList.add('active');
-    }
+    document.getElementById('modelFile').addEventListener('change', e => { openFile(e.target.files[0]); e.target.value = ''; });
+    document.getElementById('startBtn').addEventListener('click', () => { processModel(); showTab('tab2'); });
+    document.getElementById('toTab3Btn').addEventListener('click', () => { makeCommands(); showTab('tab3'); });
 
-    document.getElementById('resolution').addEventListener('input', e => document.getElementById('resolutionDisplay').textContent = e.target.value);
-    document.getElementById('scale').addEventListener('input', e => document.getElementById('scaleDisplay').textContent = e.target.value);
+    document.getElementById('tab1Btn').addEventListener('click', () => showTab('tab1'));
+    document.getElementById('tab2Btn').addEventListener('click', () => showTab('tab2'));
+    document.getElementById('tab3Btn').addEventListener('click', () => showTab('tab3'));
 
-    document.getElementById('modelFile').addEventListener('change', e => {
-        loadModel(e.target.files[0]);
-        e.target.value = '';
+    document.getElementById('btnShowOrig').addEventListener('click', () => { if (mainMesh) mainMesh.visible = !mainMesh.visible; });
+    document.getElementById('btnShowVox').addEventListener('click', () => { if (voxelMesh) voxelMesh.visible = !voxelMesh.visible; });
+    document.getElementById('btnResetCam').addEventListener('click', () => { camera.position.set(0, 0, 5); controls.target.set(0, 0, 0); });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+        const text = document.getElementById('cmdList').textContent;
+        navigator.clipboard.writeText(text).then(() => msg('Скопировано в буфер'));
     });
 
-    document.getElementById('voxelizeBtn').addEventListener('click', performVoxelization);
-    document.getElementById('generateBtn').addEventListener('click', () => { generateCommands(); goToTab('tab3'); });
-
-    document.getElementById('tab1Btn').addEventListener('click', () => goToTab('tab1'));
-    document.getElementById('tab2Btn').addEventListener('click', () => goToTab('tab2'));
-    document.getElementById('tab3Btn').addEventListener('click', () => goToTab('tab3'));
-
-    document.getElementById('toggleOriginalBtn').addEventListener('click', () => { if (originalMesh) originalMesh.visible = !originalMesh.visible; });
-    document.getElementById('toggleVoxelBtn').addEventListener('click', () => { if (voxelMesh) voxelMesh.visible = !voxelMesh.visible; });
-    document.getElementById('resetCameraBtn').addEventListener('click', () => { camera.position.set(0, 0, 5); controls.target.set(0, 0, 0); });
-
-    window.createTestCube = function() {
-        const cube = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshBasicMaterial({ color: 0x00ff41, wireframe: true }));
-        setupModel(cube);
-    };
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+        const text = document.getElementById('cmdList').textContent;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'multicraft_commands.txt';
+        a.click();
+    });
 
     window.addEventListener('DOMContentLoaded', () => {
-        initThreeJS();
-        showToast('SYSTEM READY // Загрузите файл');
+        initEngine();
     });
     </script>
 </body>
