@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model to Luanti Blocks Converter</title>
+    <style>
+        :root {
+            --bg: #1a1a1a;
+            --card: #232323;
+            --card2: #2a2a2a;
+            --border: #3a3a3a;
+            --text: #eaeaea;
+            --muted: #9a9a9a;
+            --blue: #2f7ff2;
+            --blue-dark: #1f5fc4;
+            --green: #3ecf6b;
+            --green-dark: #2ba854;
+            --accent: #8a5cf6;
+            --red: #ef4444;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 18px 20px 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            margin: 0 0 4px;
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+        }
+
+        header h1 span { color: var(--accent); }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .tabbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            background: #151515;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tabbar button {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            padding: 14px 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .tabbar button.active {
+            color: var(--text);
+            border-bottom-color: var(--accent);
+        }
+
+        .tabbar button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 16px 60px;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeIn 0.2s ease; }
+
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(4px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+
+        .card h2 {
+            margin: 0 0 14px;
+            font-size: 1rem;
+            color: #cfcfcf;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h2 .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: inline-block;
+        }
+
+        label.field-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        input[type="range"], select {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+
+        select {
+            padding: 10px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            background: var(--card2);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            transition: transform 0.08s ease, filter 0.15s ease, opacity 0.15s ease;
+        }
+
+        button:active { transform: scale(0.97); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-blue { background: linear-gradient(180deg, var(--blue), var(--blue-dark)); flex: 1; min-width: 160px; }
+        .btn-blue:hover { filter: brightness(1.1); }
+        .btn-green { background: linear-gradient(180deg, var(--green), var(--green-dark)); width: 100%; }
+        .btn-green:hover { filter: brightness(1.1); }
+        .btn-purple { background: linear-gradient(180deg, var(--accent), #6a3fd8); width: 100%; }
+        .btn-purple:hover { filter: brightness(1.1); }
+        .btn-full { width: 100%; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+        .size-display {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 6px;
+            color: var(--accent);
+        }
+
+        .value-display {
+            display: inline-block;
+            background: var(--card2);
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--card2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--blue));
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+
+        #canvas3d {
+            width: 100%;
+            height: 500px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #0a0a0a;
+        }
+
+        .preview-controls {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .parts-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .part-card {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .part-card h3 {
+            margin: 0 0 10px;
+            font-size: 0.95rem;
+            color: var(--accent);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .stat-item {
+            background: var(--card2);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--muted);
+            padding: 30px 10px;
+            font-size: 0.85rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card);
+            color: var(--text);
+            padding: 14px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast.error {
+            border-color: var(--red);
+            color: #ff9999;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 10px;
+            background: var(--card2);
+            border-radius: 8px;
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--accent);
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .checkbox-label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .info-box {
+            background: rgba(142, 95, 246, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #cfcfcf;
+        }
+
+        .warning-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--red);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #ffb3b3;
+        }
+
+        @media (max-width: 768px) {
+            .tabbar button { font-size: 0.7rem; }
+            header h1 { font-size: 1.1rem; }
+            main { padding: 12px 10px 40px; }
+            .card { padding: 14px; }
+            #canvas3d { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>3D Model to <span>Luanti</span> Blocks</h1>
+        <p>WorldEdit Command Generator for Minetest/Luanti Servers</p>
+    </header>
+
+    <div class="tabbar">
+        <button id="tab1Btn" class="active">📁 Load 3D Model</button>
+        <button id="tab2Btn" disabled>👁️ Preview & Voxelize</button>
+        <button id="tab3Btn" disabled>📋 Generate Commands</button>
+    </div>
+
+    <main>
+        <!-- TAB 1: Load 3D Model -->
+        <div id="tab1" class="tab-panel active">
+            <div class="card">
+                <h2><span class="dot"></span>Load 3D Model File</h2>
+                <label class="field-label">Select 3D Model (OBJ, GLB, GLTF, STL)</label>
+                <input type="file" id="modelFile" accept=".obj,.glb,.gltf,.stl" />
+                <div class="info-box">
+                    ✓ Supported formats: OBJ, GLB, GLTF, STL<br/>
+                    ✓ File size: up to 50MB recommended
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="dot"></span>Voxelization Settings</h2>
+                
+                <label class="field-label">
+                    Block Resolution (smaller = more detail)
+                    <span class="value-display" id="resolutionDisplay">0.5</span>
+                </label>
+                <input type="range" id="resolution" min="0.05" max="1.0" step="0.05" value="0.5" />
+                <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">Range: 0.05 - 1.0 (0.05 = very detailed, 1.0 = blocky)</div>
+
+                <label class="field-label" style="margin-top: 16px;">
+                    Scale Factor
+                    <span class="value-display" id="scaleDisplay">1</span>
+                </label>
+                <input type="range" id="scale" min="1" max="5" step="1" value="1" />
+                <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">Multiply block count by this factor</div>
+
+                <label class="field-label" style="margin-top: 16px;">Block Type Mode</label>
+                <select id="blockMode">
+                    <option value="cubes">🟦 Standard Blocks Only</option>
+                    <option value="detailed">🏗️ With Details (Stairs, Slabs, Columns)</option>
+                </select>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="limitBlocks" checked />
+                    <label class="checkbox-label">Limit to 100,000 blocks maximum</label>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="dot"></span>Action</h2>
+                <button class="btn-purple btn-full" id="voxelizeBtn">🚀 Start Voxelization</button>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div style="text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 8px;" id="progressText"></div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Preview & Voxelize -->
+        <div id="tab2" class="tab-panel">
+            <div class="card">
+                <h2><span class="dot"></span>3D Preview</h2>
+                <div id="canvas3d"></div>
+                <div class="preview-controls">
+                    <button class="btn-outline" id="toggleOriginalBtn">👓 Show Original</button>
+                    <button class="btn-outline" id="toggleVoxelBtn">🎮 Show Voxels</button>
+                    <button class="btn-outline" id="resetCameraBtn">🔄 Reset Camera</button>
+                </div>
+                <div class="info-box">
+                    💡 Use mouse to rotate | Scroll to zoom | Right-click to pan
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="dot"></span>Voxelization Statistics</h2>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Blocks</div>
+                        <div class="stat-value" id="statTotal">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Standard Cubes</div>
+                        <div class="stat-value" id="statCubes">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Stairs</div>
+                        <div class="stat-value" id="statStairs">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Slabs</div>
+                        <div class="stat-value" id="statSlabs">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Columns</div>
+                        <div class="stat-value" id="statColumns">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Processing Time</div>
+                        <div class="stat-value" id="statTime">0s</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="dot"></span>Next Step</h2>
+                <button class="btn-green btn-full" id="generateBtn">📝 Generate Commands</button>
+            </div>
+        </div>
+
+        <!-- TAB 3: Generate Commands -->
+        <div id="tab3" class="tab-panel">
+            <div class="card">
+                <h2><span class="dot"></span>Export WorldEdit Commands</h2>
+                <div class="row">
+                    <button class="btn-blue" id="copyAllBtn">📋 Copy All</button>
+                    <button class="btn-blue" id="downloadBtn">⬇️ Download TXT</button>
+                </div>
+                <div id="commandsContainer" class="parts-grid"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+    // ==================================================================
+    // BLOCK TABLE - All Luanti Blocks with RGB Colors
+    // ==================================================================
+    const BLOCK_TABLE = {
+        'default:stone': [128, 128, 128],
+        'default:cobble': [128, 120, 110],
+        'default:brick': [168, 80, 60],
+        'default:sand': [220, 200, 150],
+        'default:gravel': [140, 140, 140],
+        'default:dirt': [110, 100, 80],
+        'default:clay': [100, 100, 120],
+        'default:wood': [120, 80, 40],
+        'default:glass': [180, 200, 220],
+        'default:aspen_wood': [140, 100, 50],
+        'default:pine_wood': [80, 60, 30],
+        'default:acacia_wood': [150, 90, 40],
+        'default:junglewood': [100, 70, 30],
+        'stairs:stone': [120, 120, 120],
+        'stairs:stone_outer': [120, 120, 120],
+        'stairs:stone_inner': [120, 120, 120],
+        'stairs:brick': [160, 75, 55],
+        'slabs:stone_top': [120, 120, 120],
+        'slabs:stone_bottom': [120, 120, 120],
+        'slabs:stone_double': [120, 120, 120],
+        'slabs:brick_top': [160, 75, 55],
+        'pillar:stone_vertical': [120, 120, 120],
+        'pillar:stone_horizontal': [120, 120, 120],
+        'concrete:concrete_white': [240, 240, 240],
+        'concrete:concrete_black': [30, 30, 30],
+        'concrete:concrete_red': [200, 50, 50],
+        'concrete:concrete_green': [80, 160, 80],
+        'concrete:concrete_blue': [80, 100, 200],
+        'concrete:concrete_yellow': [240, 200, 30],
+        'concrete:concrete_orange': [220, 120, 30],
+        'concrete:concrete_purple': [160, 80, 200],
+        'concrete:concrete_cyan': [100, 200, 220],
+        'concrete:concrete_pink': [240, 150, 200],
+        'concrete:concrete_lime': [150, 240, 80],
+        'concrete:concrete_brown': [120, 80, 40],
+        'concrete:concrete_gray': [120, 120, 120],
+        'concrete:concrete_light_gray': [180, 180, 180],
+        'wool:white': [240, 240, 240],
+        'wool:black': [40, 40, 40],
+        'wool:red': [200, 50, 50],
+        'wool:green': [100, 160, 80],
+        'wool:blue': [80, 100, 200],
+        'wool:yellow': [240, 200, 30],
+        'wool:orange': [220, 120, 30],
+        'wool:purple': [160, 80, 200],
+        'wool:cyan': [100, 200, 220],
+        'wool:pink': [240, 150, 200],
+        'wool:lime': [150, 240, 80],
+        'wool:brown': [120, 80, 40],
+        'wool:gray': [120, 120, 120],
+        'wool:light_gray': [180, 180, 180],
+        'hardened_clay:white': [220, 210, 200],
+        'hardened_clay:red': [180, 70, 70],
+        'hardened_clay:brown': [130, 90, 70],
+        'hardened_clay:orange': [200, 110, 70],
+        'hardened_clay:yellow': [240, 200, 80],
+        'hardened_clay:green': [110, 150, 100],
+        'hardened_clay:cyan': [120, 190, 200],
+        'hardened_clay:blue': [100, 130, 180],
+        'hardened_clay:purple': [170, 100, 180],
+        'hardened_clay:magenta': [200, 100, 180],
+        'hardened_clay:pink': [230, 150, 190],
+        'hardened_clay:black': [60, 60, 60],
+        'hardened_clay:gray': [140, 140, 140],
+        'hardened_clay:light_gray': [190, 190, 190],
+        'quartz:quartz_brick': [235, 235, 235],
+        'quartz:quartz_brick_pink': [240, 200, 220],
+        'quartz:quartz_brick_yellow': [240, 235, 180],
+        'quartz:quartz_brick_orange': [240, 200, 140],
+        'stripped_wood:apple': [180, 130, 100],
+        'stripped_wood:birch': [210, 195, 170],
+        'stripped_wood:dark_oak': [100, 70, 50],
+    };
+
+    // ==================================================================
+    // COLOR CONVERSION FUNCTIONS
+    // ==================================================================
+    function srgbToLinear(c) {
+        c = c / 255;
+        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    }
+
+    function xyzToLab(x, y, z) {
+        const ref_x = 0.95047, ref_y = 1.00000, ref_z = 1.08883;
+        x = x / ref_x;
+        y = y / ref_y;
+        z = z / ref_z;
+        x = x > 0.008856 ? Math.pow(x, 1/3) : (7.787 * x) + (16/116);
+        y = y > 0.008856 ? Math.pow(y, 1/3) : (7.787 * y) + (16/116);
+        z = z > 0.008856 ? Math.pow(z, 1/3) : (7.787 * z) + (16/116);
+        const l = (116 * y) - 16;
+        const a = 500 * (x - y);
+        const b = 200 * (y - z);
+        return [l, a, b];
+    }
+
+    function rgbToLab(r, g, b) {
+        const rl = srgbToLinear(r);
+        const gl = srgbToLinear(g);
+        const bl = srgbToLinear(b);
+        const x = rl * 0.4124 + gl * 0.3576 + bl * 0.1805;
+        const y = rl * 0.2126 + gl * 0.7152 + bl * 0.0722;
+        const z = rl * 0.0193 + gl * 0.1192 + bl * 0.9505;
+        return xyzToLab(x, y, z);
+    }
+
+    function deltaE(lab1, lab2) {
+        const dl = lab1[0] - lab2[0];
+        const da = lab1[1] - lab2[1];
+        const db = lab1[2] - lab2[2];
+        return Math.sqrt(dl*dl + da*da + db*db);
+    }
+
+    function nearestBlock(r, g, b) {
+        const targetLab = rgbToLab(r, g, b);
+        let bestBlock = 'default:stone';
+        let bestDistance = Infinity;
+
+        for (const [blockId, rgb] of Object.entries(BLOCK_TABLE)) {
+            const blockLab = rgbToLab(rgb[0], rgb[1], rgb[2]);
+            const dist = deltaE(targetLab, blockLab);
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestBlock = blockId;
+            }
+        }
+        return bestBlock;
+    }
+
+    // ==================================================================
+    // VOXELIZATION & MESH PROCESSING
+    // ==================================================================
+    class VoxelConverter {
+        constructor(resolution, scale, blockMode) {
+            this.resolution = resolution;
+            this.scale = scale;
+            this.blockMode = blockMode;
+            this.voxels = new Map();
+            this.blockStats = {
+                cubes: 0,
+                stairs: 0,
+                slabs: 0,
+                columns: 0
+            };
+        }
+
+        voxelizeMesh(geometry) {
+            const positions = geometry.attributes.position.array;
+            const voxelSet = new Set();
+
+            for (let i = 0; i < positions.length; i += 3) {
+                const x = positions[i];
+                const y = positions[i + 1];
+                const z = positions[i + 2];
+
+                const vx = Math.round(x / this.resolution);
+                const vy = Math.round(y / this.resolution);
+                const vz = Math.round(z / this.resolution);
+
+                const key = `${vx},${vy},${vz}`;
+                voxelSet.add(key);
+            }
+
+            // Convert to array of voxel coordinates
+            const voxels = Array.from(voxelSet).map(key => {
+                const [x, y, z] = key.split(',').map(Number);
+                return [x, y, z];
+            });
+
+            return voxels;
+        }
+
+        getNeighbors(voxelSet, x, y, z) {
+            return {
+                up: voxelSet.has(`${x},${y + 1},${z}`),
+                down: voxelSet.has(`${x},${y - 1},${z}`),
+                north: voxelSet.has(`${x},${y},${z + 1}`),
+                south: voxelSet.has(`${x},${y},${z - 1}`),
+                east: voxelSet.has(`${x + 1},${y},${z}`),
+                west: voxelSet.has(`${x - 1},${y},${z}`)
+            };
+        }
+
+        determineBlockType(voxelSet, x, y, z, baseBlock) {
+            if (this.blockMode !== 'detailed') {
+                return baseBlock;
+            }
+
+            const neighbors = this.getNeighbors(voxelSet, x, y, z);
+            const horizontalNeighbors = neighbors.north || neighbors.south || neighbors.east || neighbors.west;
+
+            // Stairs: if below has block, above empty, and one side empty
+            if (neighbors.down && !neighbors.up) {
+                const oneSideEmpty = !neighbors.north || !neighbors.south || !neighbors.east || !neighbors.west;
+                if (oneSideEmpty) {
+                    this.blockStats.stairs++;
+                    const stairBlock = baseBlock.replace(':', ':stairs:').replace(':', '_');
+                    return `stairs:${baseBlock.split(':')[1]}`;
+                }
+            }
+
+            // Slabs: if below has block, above empty, no horizontal neighbors
+            if (neighbors.down && !neighbors.up && !horizontalNeighbors) {
+                this.blockStats.slabs++;
+                return `slabs:${baseBlock.split(':')[1]}_top`;
+            }
+
+            // Columns: if has neighbors above AND below
+            if (neighbors.up && neighbors.down) {
+                this.blockStats.columns++;
+                return `pillar:${baseBlock.split(':')[1]}_vertical`;
+            }
+
+            // Default: standard cube
+            this.blockStats.cubes++;
+            return baseBlock;
+        }
+    }
+
+    // ==================================================================
+    // THREE.JS SETUP
+    // ==================================================================
+    let scene, camera, renderer, controls;
+    let originalMesh, voxelMesh;
+    let currentModel = null;
+
+    function initThreeJS() {
+        const container = document.getElementById('canvas3d');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a0a);
+
+        camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
+        camera.position.z = 5;
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Lighting
+        const light1 = new THREE.DirectionalLight(0xffffff, 1);
+        light1.position.set(5, 10, 7);
+        scene.add(light1);
+
+        const light2 = new THREE.AmbientLight(0x808080);
+        scene.add(light2);
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            const newWidth = container.clientWidth;
+            const newHeight = container.clientHeight;
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(newWidth, newHeight);
+        });
+    }
+
+    function loadModel(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const ext = file.name.split('.').pop().toLowerCase();
+            const content = e.target.result;
+
+            try {
+                if (ext === 'obj') {
+                    loadOBJ(content);
+                } else if (ext === 'stl') {
+                    loadSTL(content);
+                } else if (ext === 'glb' || ext === 'gltf') {
+                    loadGLB(content, ext);
+                }
+            } catch (err) {
+                showToast('Error loading model: ' + err.message, true);
+            }
+        };
+
+        if (file.name.endsWith('.glb') || file.name.endsWith('.gltf')) {
+            reader.readAsArrayBuffer(file);
+        } else {
+            reader.readAsText(file);
+        }
+    }
+
+    function loadOBJ(text) {
+        const loader = new THREE.OBJLoader();
+        const object = loader.parse(text);
+        setupModel(object);
+    }
+
+    function loadSTL(arrayBuffer) {
+        const loader = new THREE.STLLoader();
+        const geometry = loader.parse(arrayBuffer);
+        const material = new THREE.MeshPhongMaterial({ color: 0x888888 });
+        const mesh = new THREE.Mesh(geometry, material);
+        setupModel(mesh);
+    }
+
+    function loadGLB(arrayBuffer, format) {
+        const loader = new THREE.GLTFLoader();
+        loader.parse(arrayBuffer, '', (gltf) => {
+            setupModel(gltf.scene);
+        });
+    }
+
+    function setupModel(model) {
+        // Remove old mesh
+        if (originalMesh) scene.remove(originalMesh);
+        if (voxelMesh) scene.remove(voxelMesh);
+
+        // Center and scale model
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        model.position.sub(center);
+
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 4 / maxDim;
+        model.scale.multiplyScalar(scale);
+
+        originalMesh = model;
+        scene.add(originalMesh);
+        currentModel = model;
+
+        // Reset camera
+        camera.position.set(0, 0, 5);
+        controls.target.set(0, 0, 0);
+        controls.update();
+
+        showToast('Model loaded successfully!');
+        document.getElementById('tab2Btn').disabled = false;
+    }
+
+    // ==================================================================
+    // VOXELIZATION PROCESS
+    // ==================================================================
+    async function performVoxelization() {
+        if (!currentModel) {
+            showToast('Please load a model first!', true);
+            return;
+        }
+
+        const resolution = parseFloat(document.getElementById('resolution').value);
+        const scale = parseInt(document.getElementById('scale').value);
+        const blockMode = document.getElementById('blockMode').value;
+        const limitBlocks = document.getElementById('limitBlocks').checked;
+
+        const startTime = performance.now();
+        updateProgress(0, 'Extracting geometry...');
+
+        // Extract all geometries from the model
+        const geometries = [];
+        currentModel.traverse((obj) => {
+            if (obj.geometry) {
+                geometries.push(obj.geometry);
+            }
+        });
+
+        if (geometries.length === 0) {
+            showToast('No geometry found in model!', true);
+            return;
+        }
+
+        const converter = new VoxelConverter(resolution, scale, blockMode);
+        let allVoxels = [];
+
+        for (let i = 0; i < geometries.length; i++) {
+            const voxels = converter.voxelizeMesh(geometries[i]);
+            allVoxels = allVoxels.concat(voxels);
+            updateProgress(Math.round((i + 1) / geometries.length * 30), 'Voxelizing geometry...');
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+
+        // Remove duplicates
+        const voxelSet = new Set(allVoxels.map(v => v.join(',')));
+        const uniqueVoxels = Array.from(voxelSet).map(s => s.split(',').map(Number));
+
+        updateProgress(40, 'Analyzing voxels...');
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        // Check limit
+        if (limitBlocks && uniqueVoxels.length > 100000) {
+            showToast(`Model has ${uniqueVoxels.length} blocks. Increase resolution or disable limit!`, true);
+            updateProgress(0);
+            return;
+        }
+
+        // Color sampling and block assignment
+        updateProgress(50, 'Assigning blocks by color...');
+        const blockMap = new Map();
+        const voxelSetStr = new Set(uniqueVoxels.map(v => v.join(',')));
+
+        for (let i = 0; i < uniqueVoxels.length; i++) {
+            const [x, y, z] = uniqueVoxels[i];
+            
+            // Sample color from original model (default gray)
+            const blockId = nearestBlock(128, 128, 128);
+            const finalBlock = converter.determineBlockType(voxelSetStr, x, y, z, blockId);
+            
+            const key = `${x},${y},${z}`;
+            blockMap.set(key, finalBlock);
+
+            if (i % 1000 === 0) {
+                updateProgress(50 + Math.round((i / uniqueVoxels.length) * 40), 'Assigning blocks...');
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+        }
+
+        // Create voxel visualization
+        updateProgress(95, 'Creating preview...');
+        createVoxelVisualization(uniqueVoxels);
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        // Store for command generation
+        window.voxelData = {
+            voxels: uniqueVoxels,
+            blockMap: blockMap,
+            converter: converter
+        };
+
+        const endTime = performance.now();
+        const processingTime = ((endTime - startTime) / 1000).toFixed(2);
+
+        // Update stats
+        const total = uniqueVoxels.length;
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statCubes').textContent = converter.blockStats.cubes;
+        document.getElementById('statStairs').textContent = converter.blockStats.stairs;
+        document.getElementById('statSlabs').textContent = converter.blockStats.slabs;
+        document.getElementById('statColumns').textContent = converter.blockStats.columns;
+        document.getElementById('statTime').textContent = processingTime + 's';
+
+        updateProgress(100, 'Complete!');
+        showToast(`Voxelization complete! ${total} blocks in ${processingTime}s`);
+        document.getElementById('tab3Btn').disabled = false;
+
+        setTimeout(() => updateProgress(0), 1500);
+    }
+
+    function createVoxelVisualization(voxels) {
+        if (voxelMesh) scene.remove(voxelMesh);
+
+        const geometry = new THREE.BufferGeometry();
+        const positions = [];
+        const colors = [];
+
+        for (const [x, y, z] of voxels) {
+            const px = (x) * 0.1;
+            const py = (y) * 0.1;
+            const pz = (z) * 0.1;
+            const s = 0.045;
+
+            positions.push(
+                px - s, py - s, pz - s,
+                px + s, py - s, pz - s,
+                px + s, py + s, pz - s,
+                px - s, py + s, pz - s,
+                px - s, py - s, pz + s,
+                px + s, py - s, pz + s,
+                px + s, py + s, pz + s,
+                px - s, py + s, pz + s
+            );
+
+            const hue = Math.random();
+            const color = new THREE.Color().setHSL(hue, 0.8, 0.5);
+
+            for (let i = 0; i < 8; i++) {
+                colors.push(color.r, color.g, color.b);
+            }
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
+
+        const material = new THREE.MeshPhongMaterial({
+            vertexColors: true,
+            wireframe: false,
+            side: THREE.DoubleSide
+        });
+
+        voxelMesh = new THREE.Mesh(geometry, material);
+        scene.add(voxelMesh);
+    }
+
+    // ==================================================================
+    // COMMAND GENERATION
+    // ==================================================================
+    function generateCommands() {
+        if (!window.voxelData) {
+            showToast('No voxelized data found!', true);
+            return;
+        }
+
+        updateProgress(10, 'Sorting voxels...');
+
+        const { voxels, blockMap } = window.voxelData;
+        
+        // Sort voxels: Z → Y → X (optimal building order)
+        const sortedVoxels = voxels.sort((a, b) => {
+            if (a[2] !== b[2]) return a[2] - b[2];
+            if (a[1] !== b[1]) return a[1] - b[1];
+            return a[0] - b[0];
+        });
+
+        updateProgress(30, 'Generating commands...');
+
+        const commands = [];
+        commands.push('/1');
+        commands.push('/2');
+
+        let currentPos = [0, 0, 0];
+        let cmdCount = 0;
+
+        for (const [x, y, z] of sortedVoxels) {
+            const key = `${x},${y},${z}`;
+            const block = blockMap.get(key) || 'default:stone';
+
+            // Generate shift commands
+            const shifts = [];
+            for (let i = 0; i < 3; i++) {
+                const target = [x, y, z][i];
+                const diff = target - currentPos[i];
+                if (diff !== 0) {
+                    const axis = ['x', 'y', 'z'][i];
+                    shifts.push(`/shift ${axis} ${diff}`);
+                    currentPos[i] = target;
+                }
+            }
+
+            commands.push(...shifts);
+            commands.push(`/s ${block}`);
+            cmdCount++;
+
+            if (cmdCount % 500 === 0) {
+                updateProgress(30 + Math.round((cmdCount / sortedVoxels.length) * 60));
+            }
+        }
+
+        updateProgress(95, 'Splitting into parts...');
+
+        // Split into parts (30000 lines each)
+        const parts = splitIntoParts(commands, 30000);
+        window.commandParts = parts;
+
+        updateProgress(100, 'Complete!');
+        renderCommandParts(parts);
+        showToast(`Generated ${commands.length} commands in ${parts.length} part(s)`);
+        setTimeout(() => updateProgress(0), 1500);
+    }
+
+    function splitIntoParts(commands, maxPerPart) {
+        const parts = [];
+        for (let i = 0; i < commands.length; i += maxPerPart) {
+            parts.push(commands.slice(i, i + maxPerPart));
+        }
+        return parts;
+    }
+
+    function renderCommandParts(parts) {
+        const container = document.getElementById('commandsContainer');
+        container.innerHTML = '';
+
+        const grid = document.createElement('div');
+        grid.className = 'parts-grid';
+
+        parts.forEach((part, i) => {
+            const card = document.createElement('div');
+            card.className = 'part-card';
+
+            const h3 = document.createElement('h3');
+            h3.textContent = `Part ${i + 1} (${part.length} commands)`;
+            card.appendChild(h3);
+
+            const btn = document.createElement('button');
+            btn.className = 'btn-green';
+            btn.textContent = `Copy Part ${i + 1}`;
+            btn.addEventListener('click', () => {
+                fastCopy(part.join('\n'), `Part ${i + 1} copied!`);
+            });
+            card.appendChild(btn);
+
+            grid.appendChild(card);
+        });
+
+        container.appendChild(grid);
+    }
+
+    // ==================================================================
+    // UTILITY FUNCTIONS
+    // ==================================================================
+    function updateProgress(percent, text) {
+        const fill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        fill.style.width = percent + '%';
+        if (text) progressText.textContent = text;
+    }
+
+    function showToast(msg, isError) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.toggle('error', !!isError);
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function fastCopy(text, successMsg) {
+        if (!navigator.clipboard) {
+            showToast('Clipboard not available', true);
+            return;
+        }
+        navigator.clipboard.writeText(text)
+            .then(() => showToast(successMsg || 'Copied!'))
+            .catch(() => showToast('Copy failed', true));
+    }
+
+    function goToTab(tabId) {
+        document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // ==================================================================
+    // EVENT LISTENERS
+    // ==================================================================
+    document.getElementById('resolution').addEventListener('input', (e) => {
+        document.getElementById('resolutionDisplay').textContent = e.target.value;
+    });
+
+    document.getElementById('scale').addEventListener('input', (e) => {
+        document.getElementById('scaleDisplay').textContent = e.target.value;
+    });
+
+    document.getElementById('modelFile').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        showToast('Loading model...');
+        loadModel(file);
+        e.target.value = '';
+    });
+
+    document.getElementById('voxelizeBtn').addEventListener('click', () => {
+        performVoxelization();
+    });
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+        generateCommands();
+        goToTab('tab3');
+    });
+
+    document.getElementById('copyAllBtn').addEventListener('click', () => {
+        if (!window.commandParts || !window.commandParts.length) {
+            showToast('No commands generated', true);
+            return;
+        }
+        const allCommands = window.commandParts.map(p => p.join('\n')).join('\n');
+        fastCopy(allCommands, 'All commands copied!');
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+        if (!window.commandParts || !window.commandParts.length) {
+            showToast('No commands generated', true);
+            return;
+        }
+        const allCommands = window.commandParts.map(p => p.join('\n')).join('\n');
+        const blob = new Blob([allCommands], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'luanti_build_commands.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Download started!');
+    });
+
+    document.getElementById('tab1Btn').addEventListener('click', () => goToTab('tab1'));
+    document.getElementById('tab2Btn').addEventListener('click', () => goToTab('tab2'));
+    document.getElementById('tab3Btn').addEventListener('click', () => goToTab('tab3'));
+
+    document.getElementById('toggleOriginalBtn').addEventListener('click', () => {
+        if (originalMesh) originalMesh.visible = !originalMesh.visible;
+        showToast(originalMesh.visible ? 'Original visible' : 'Original hidden');
+    });
+
+    document.getElementById('toggleVoxelBtn').addEventListener('click', () => {
+        if (voxelMesh) voxelMesh.visible = !voxelMesh.visible;
+        showToast(voxelMesh.visible ? 'Voxels visible' : 'Voxels hidden');
+    });
+
+    document.getElementById('resetCameraBtn').addEventListener('click', () => {
+        camera.position.set(0, 0, 5);
+        controls.target.set(0, 0, 0);
+        controls.update();
+        showToast('Camera reset');
+    });
+
+    // Initialize
+    window.addEventListener('load', () => {
+        initThreeJS();
+        showToast('Ready! Load a 3D model to start.');
+    });
+    </script>
+</body>
+</html>
